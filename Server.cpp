@@ -48,7 +48,7 @@ void Server::updateEvents(int socket, int16_t filter, uint16_t flags, uint32_t f
 	_eventCheckList.push_back(event);
 }
 
-User* Server::findClientByNickname(string nickname) {
+User* Server::findClientByNickname(const string& nickname) {
 	map<int, User*>::const_iterator it;
 	for (it = _allUser.cbegin(); it != _allUser.end(); ++it) {
 		if (it->second->getNickname() == nickname) return it->second;
