@@ -22,6 +22,8 @@ class User {
         User(int fd);
 		~User();
 		
+		int getFd(void);
+		const int getFd(void) const;
 		string getNickname(void) const;
 		string getCmdBuffer(void);
 		const string getCmdBuffer(void) const;
