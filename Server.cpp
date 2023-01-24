@@ -88,11 +88,11 @@ void Server::acceptNewClient(void) {
 }
 
 void Server::readDataFromClient(const struct kevent& event) {
-	char buf[512];
+	char buf[513];
 	// User* targetUser = _allUser[event.ident];
 	int readBytes;
 
-	readBytes = read(event.ident, buf, sizeof(buf));
+	readBytes = read(event.ident, buf, 512);
 	if (readBytes <= 0) {
 		cerr << "client read error!" << endl;
 		disconnectClient(event.ident);
