@@ -16,6 +16,8 @@ class Message {
         Message(const Message& packet);
         Message& operator=(const Message& packet);
 
+        void parse(const string& msg);
+
     public:
         Message(const string& msg);
         ~Message();
