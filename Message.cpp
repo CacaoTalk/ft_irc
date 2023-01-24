@@ -45,3 +45,29 @@ void Message::parse(const string& msg) {
         } else _params.push_back(splitedBySpace[i]);
     }
 }
+
+void Message::runCommand(Server& server) {
+    if (_command == "PRIVMSG") cmdPrivmsg(server);
+}
+
+void Message::cmdPrivmsg(Server& server) {
+    if (_params.size() != 2) return ;
+
+    vector<string> targetList = split(_params[0], ',');
+    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
+        string targetName = *it;
+        if (targetName[0] == '#') {
+            map<string, Channel *>::iterator channelIt;
+            channelIt = server._allChannel.find(targetName.substr(1, string::npos));
+            if (channelIt == server._allChannel.end()) continue;
+
+            channelIt->second->broadcast(_params[1], _fd);
+        } else {
+            User *targetUser;
+
+            targetUser = server.findClientByNickname(targetName);
+            if (targetUser == NULL) continue;
+            targetUser->addToReplyBuffer(_params[1]);
+        }
+    }
+}

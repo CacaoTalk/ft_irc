@@ -20,10 +20,12 @@ class Message {
 
         vector<string> split(const string& str, const char delimeter);
         void parse(const string& msg);
+        void cmdPrivmsg(Server& server);
 
     public:
         Message(int fd, const string& msg);
         ~Message();
+        void runCommand(Server& server);
 };
 
 #endif
