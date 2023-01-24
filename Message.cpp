@@ -1,14 +1,11 @@
 #include "Message.hpp"
-//
-#include <iostream>
 
 Message::Message(const string& msg) {
     parse(msg);
-	// selectCommand();
 }
 
 Message::~Message() {
-    _commands.clear();
+    _command.clear();
     _params.clear();
 }
 
@@ -31,7 +28,7 @@ void Message::parse(const string& msg) {
 
     for (vector<string>::size_type i = 0; i < splitedBySpace.size(); ++i) {
         if (i == 0) {
-            _commands = splitedBySpace[i];
+            _command = splitedBySpace[i];
             continue ;
         }
         if (splitedBySpace[i][0] == ':') {

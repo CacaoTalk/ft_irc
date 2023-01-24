@@ -9,7 +9,7 @@ using namespace std;
 
 class Message {
     private:
-        string _commands;
+        string _command;
         vector<string> _params;
         
         Message();
