@@ -8,10 +8,6 @@ int User::getFd(void) {
     return _fd;
 }
 
-const int User::getFd(void) const {
-    return _fd;
-}
-
 string User::getNickname(void) const {
     return _nickname;
 }
