@@ -10,7 +10,7 @@ using namespace std;
 class Server;
 class Message {
     private:
-        int _fd;
+        User *_user;
         string _command;
         vector<string> _params;
         
@@ -23,7 +23,7 @@ class Message {
         void cmdPrivmsg(Server& server);
 
     public:
-        Message(int fd, const string& msg);
+        Message(User *user, const string& msg);
         ~Message();
         void runCommand(Server& server);
 };

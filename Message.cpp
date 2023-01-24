@@ -3,7 +3,7 @@
 // for debug
 #include <iostream>
 
-Message::Message(int fd, const string& msg): _fd(fd) {
+Message::Message(User *user, const string& msg): _user(user) {
     parse(msg);
     // for debug: print command and params
     cout << "COMMAND: " << _command << endl;
@@ -70,7 +70,7 @@ void Message::cmdPrivmsg(Server& server) {
 
             targetChannel = server.findChannelByName(targetName.substr(1, string::npos));
             if (targetChannel == NULL) continue;
-            targetChannel->broadcast(_params[1] + '\n', _fd);
+            targetChannel->broadcast(_params[1] + '\n', _user->getFd());
         } else {
             User *targetUser;
 
