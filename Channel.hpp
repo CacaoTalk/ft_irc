@@ -24,6 +24,7 @@ class Channel {
         Channel(const string& name);
         ~Channel();
 
+        string getName(void) const;
         void addUser(int clientFd, User *user);
         int deleteUser(int clientFd);
         bool isUserOper(int clientFd);

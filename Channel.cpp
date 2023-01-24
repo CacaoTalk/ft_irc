@@ -4,6 +4,10 @@ Channel::Channel(const string& name): _name(name) {}
 
 Channel::~Channel() { }
 
+string Channel::getName(void) const {
+    return _name;
+}
+
 void Channel::addUser(int clientFd, User *user) {
     if (_userList.empty()) _operList.insert(clientFd);
     _userList.insert(pair<int, User *>(clientFd, user));
