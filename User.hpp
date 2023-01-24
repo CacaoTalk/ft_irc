@@ -24,7 +24,9 @@ class User {
 		
 		string getNickname(void) const;
 		string getCmdBuffer(void);
+		const string getCmdBuffer(void) const;
 		string getReplyBuffer(void);
+		const string getReplyBuffer(void) const;
 		void setCmdBuffer(const string& src);
 		void setReplyBuffer(const string& src);
 		void addToCmdBuffer(const string& src); // 채팅 받아오기

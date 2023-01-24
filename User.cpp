@@ -12,7 +12,15 @@ string User::getCmdBuffer(void) {
     return _cmdBuffer;
 }
 
+const string User::getCmdBuffer(void) const {
+    return _cmdBuffer;
+}
+
 string User::getReplyBuffer(void) {
+    return _replyBuffer;
+}
+
+const string User::getReplyBuffer(void) const {
     return _replyBuffer;
 }
 
