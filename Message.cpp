@@ -57,11 +57,11 @@ void Message::cmdPrivmsg(Server& server) {
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
         string targetName = *it;
         if (targetName[0] == '#') {
-            map<string, Channel *>::iterator channelIt;
-            channelIt = server._allChannel.find(targetName.substr(1, string::npos));
-            if (channelIt == server._allChannel.end()) continue;
+            Channel *targetChannel;
 
-            channelIt->second->broadcast(_params[1], _fd);
+            targetChannel = server.findChannelByName(targetName.substr(1, string::npos));
+            if (targetChannel == NULL) continue;
+            targetChannel->broadcast(_params[1], _fd);
         } else {
             User *targetUser;
 
