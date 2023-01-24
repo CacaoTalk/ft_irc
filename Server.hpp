@@ -17,6 +17,7 @@
 
 # include "User.hpp"
 # include "Channel.hpp"
+# include "Message.hpp"
 
 using namespace std;
 
@@ -44,6 +45,8 @@ class Server {
         void handleEvent(const struct kevent& event);
 
         User* findClientByNickname(string nickname);
+
+        friend class Message;
     public:
         Server(void);
         ~Server();
