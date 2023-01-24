@@ -97,7 +97,7 @@ void Server::acceptNewClient(void) {
 
 void Server::readDataFromClient(const struct kevent& event) {
 	char buf[513];
-	// User* targetUser = _allUser[event.ident];
+	User* targetUser = _allUser[event.ident];
 	int readBytes;
 
 	readBytes = read(event.ident, buf, 512);
@@ -106,10 +106,20 @@ void Server::readDataFromClient(const struct kevent& event) {
 		disconnectClient(event.ident);
 	} else {
 		buf[readBytes] = '\0';
-		// targetUser->addToCmdBuffer(buf);
-		// CR LF check -> exist -> parsing
-		// parsed msg -> command에 맞게 처리
-		_allChannel.begin()->second->broadcast(buf, event.ident);
+		targetUser->addToCmdBuffer(buf);
+
+		size_t crlfPos;
+		while ((crlfPos = checkCmdBuffer(targetUser)) != string::npos) {
+			cout << "beforeCmdBuffer: " << targetUser->getCmdBuffer() << endl;
+			if (crlfPos == 0) {
+				targetUser->setCmdBuffer(targetUser->getCmdBuffer().substr(1, string::npos));
+				continue;
+			}
+			Message msg(event.ident, targetUser->getCmdBuffer().substr(0, crlfPos));
+			targetUser->setCmdBuffer(targetUser->getCmdBuffer().substr(crlfPos + 1, string::npos));
+			cout << "afterCmdBuffer: " << targetUser->getCmdBuffer() << endl;
+			msg.runCommand(*this);
+		}
 	}
 }
 
@@ -149,6 +159,17 @@ void Server::handleEvent(const struct kevent& event) {
 	else if (event.filter == EVFILT_WRITE)
 		sendDataToClient(event);
 }
+
+size_t Server::checkCmdBuffer(const User *user) {
+	const size_t	crPos = user->getCmdBuffer().find(CR, 0);
+	const size_t	lfPos = user->getCmdBuffer().find(LF, 0);
+
+	if (crPos == string::npos && lfPos == string::npos) return string::npos;
+	if (crPos == string::npos && lfPos != string::npos) return lfPos;
+	if (crPos != string::npos && lfPos == string::npos) return crPos;
+	return min(crPos, lfPos);
+}
+
 
 void Server::run() {
 	int numOfEvents;

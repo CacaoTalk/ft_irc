@@ -19,6 +19,9 @@
 # include "Channel.hpp"
 # include "Message.hpp"
 
+# define CR 13
+# define LF 10
+
 using namespace std;
 
 class Server {
@@ -43,6 +46,7 @@ class Server {
         void readDataFromClient(const struct kevent& event);
         void sendDataToClient(const struct kevent& event);
         void handleEvent(const struct kevent& event);
+        size_t checkCmdBuffer(const User *user);
 
         User* findClientByNickname(const string& nickname);
         Channel* findChannelByName(const string& name);
