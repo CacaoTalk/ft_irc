@@ -64,12 +64,13 @@ Channel* Server::findChannelByName(const string& name) {
 	return NULL;
 }
 
-void Server::addChannel(const string& name) {
+Channel* Server::addChannel(const string& name) {
 	Channel *ch;
 
 	ch = new Channel(name);
 	cout << "channel added: " << name << '\n';
 	_allChannel.insert(pair<string, Channel *>(name, ch));
+	return ch;
 }
 
 void Server::deleteChannel(const string& name) {
@@ -113,7 +114,7 @@ void Server::readDataFromClient(const struct kevent& event) {
 				targetUser->setCmdBuffer(targetUser->getCmdBuffer().substr(1, string::npos));
 				continue;
 			}
-			Message msg(event.ident, targetUser->getCmdBuffer().substr(0, crlfPos));
+			Message msg(targetUser, targetUser->getCmdBuffer().substr(0, crlfPos));
 			targetUser->setCmdBuffer(targetUser->getCmdBuffer().substr(crlfPos + 1, string::npos));
 			cout << "afterCmdBuffer: " << targetUser->getCmdBuffer() << endl;
 			msg.runCommand(*this);
