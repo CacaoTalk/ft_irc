@@ -16,6 +16,7 @@ class Message {
         Message(const Message& packet);
         Message& operator=(const Message& packet);
 
+        vector<string> split(const string& str, const char delimeter);
         void parse(const string& msg);
 
     public:
