@@ -1,8 +1,15 @@
 #include "Message.hpp"
 #include "Server.hpp"
+// for debug
+#include <iostream>
 
 Message::Message(int fd, const string& msg): _fd(fd) {
     parse(msg);
+    // for debug: print command and params
+    cout << "COMMAND: " << _command << endl;
+    for (vector<string>::iterator it = _params.begin(); it != _params.end(); ++it) {
+        cout <<"PARAMS: " << *it << endl;
+    }
 }
 
 Message::~Message() {
@@ -17,7 +24,9 @@ vector<string> Message::split(const string& str, const char delimeter) {
 
     while ((delimeterPos = str.find(delimeter, cursorPos)) != string::npos) {
         splited.push_back(str.substr(cursorPos, delimeterPos - cursorPos));
-        while (str.at(delimeterPos) == delimeter) ++delimeterPos;
+        while (str.at(delimeterPos) == delimeter) {
+            if (++delimeterPos == str.length()) return splited;
+        }
         cursorPos = delimeterPos;
     }
     splited.push_back(str.substr(cursorPos, string::npos));
@@ -61,13 +70,13 @@ void Message::cmdPrivmsg(Server& server) {
 
             targetChannel = server.findChannelByName(targetName.substr(1, string::npos));
             if (targetChannel == NULL) continue;
-            targetChannel->broadcast(_params[1], _fd);
+            targetChannel->broadcast(_params[1] + '\n', _fd);
         } else {
             User *targetUser;
 
             targetUser = server.findClientByNickname(targetName);
             if (targetUser == NULL) continue;
-            targetUser->addToReplyBuffer(_params[1]);
+            targetUser->addToReplyBuffer(_params[1] + '\n');
         }
     }
 }
