@@ -56,6 +56,14 @@ User* Server::findClientByNickname(const string& nickname) {
 	return NULL;
 }
 
+Channel* Server::findChannelByName(const string& name) {
+	map<string, Channel *>::const_iterator it;
+	for (it = _allChannel.cbegin(); it != _allChannel.end(); ++it) {
+		if (it->second->getName() == name) return it->second;
+	}
+	return NULL;
+}
+
 void Server::addChannel(const string& name) {
 	Channel *ch;
 

@@ -44,7 +44,8 @@ class Server {
         void sendDataToClient(const struct kevent& event);
         void handleEvent(const struct kevent& event);
 
-        User* findClientByNickname(string nickname);
+        User* findClientByNickname(const string& nickname);
+        Channel* findChannelByName(const string& name);
 
         friend class Message;
     public:
