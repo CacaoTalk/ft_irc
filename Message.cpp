@@ -1,6 +1,7 @@
 #include "Message.hpp"
+#include "Server.hpp"
 
-Message::Message(const string& msg) {
+Message::Message(int fd, const string& msg): _fd(fd) {
     parse(msg);
 }
 

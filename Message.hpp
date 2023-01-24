@@ -7,8 +7,10 @@
 
 using namespace std;
 
+class Server;
 class Message {
     private:
+        int _fd;
         string _command;
         vector<string> _params;
         
@@ -20,7 +22,7 @@ class Message {
         void parse(const string& msg);
 
     public:
-        Message(const string& msg);
+        Message(int fd, const string& msg);
         ~Message();
 };
 
