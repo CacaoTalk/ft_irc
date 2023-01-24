@@ -91,8 +91,6 @@ void Server::acceptNewClient(void) {
 	updateEvents(clientSocket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	user = new User(clientSocket);
 	_allUser.insert(pair<int, User *>(clientSocket, user));
-	// channel에 추가 (추후 join 시에만 추가하도록 수정)
-	_allChannel.begin()->second->addUser(clientSocket, user);
 }
 
 void Server::readDataFromClient(const struct kevent& event) {
@@ -173,9 +171,6 @@ size_t Server::checkCmdBuffer(const User *user) {
 
 void Server::run() {
 	int numOfEvents;
-
-	// temp Channel
-	addChannel("tempChannel");
 	
 	initKqueue();
 	while (1) {
