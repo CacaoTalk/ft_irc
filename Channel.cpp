@@ -13,7 +13,7 @@ void Channel::addUser(int clientFd, User *user) {
     _userList.insert(pair<int, User *>(clientFd, user));
 }
 
-int Channel::deleteUser(int clientFd, const char *leaveMsg) {
+int Channel::deleteUser(int clientFd) {
     map<int, User *>::iterator it;
     string clientName;
 
@@ -26,12 +26,12 @@ int Channel::deleteUser(int clientFd, const char *leaveMsg) {
 
     if (_userList.empty()) return 0;
 
-    broadcast(clientName.append(leaveMsg));
     if (_operList.empty()) {
        pair<int, User *> nextOper;
 
        nextOper = *_userList.begin();
        _operList.insert(nextOper.first);
+       //
        broadcast(nextOper.second->getNickname().append(NEW_OPERATOR_MESSAGE));
     }
     return _userList.size();
