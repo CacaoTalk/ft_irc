@@ -2,7 +2,7 @@
 // for debug
 #include <iostream>
 
-Message::Message(User *user, const string& msg): _user(user) {
+Message::Message(const string& msg) {
     parse(msg);
     // for debug: print command and params
     cout << "COMMAND: " << _command << endl;
@@ -54,85 +54,10 @@ void Message::parse(const string& msg) {
     }
 }
 
-void Message::runCommand(Server& server) {
-    if (_command == "PRIVMSG") cmdPrivmsg(server);
-    else if (_command == "JOIN") cmdJoin(server);
-    else if (_command == "PART") cmdPart(server);
+string Message::getCommand() const {
+    return _command;
 }
 
-void Message::cmdPrivmsg(Server& server) {
-    if (_params.size() != 2) return ;
-
-    vector<string> targetList = split(_params[0], ',');
-    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
-        string targetName = *it;
-        if (targetName[0] == '#') {
-            Channel *targetChannel;
-
-            targetChannel = server.findChannelByName(targetName.substr(1, string::npos));
-            if (targetChannel == NULL) continue;
-            targetChannel->broadcast(_params[1] + '\n', _user->getFd());
-        } else {
-            User *targetUser;
-
-            targetUser = server.findClientByNickname(targetName);
-            if (targetUser == NULL) continue;
-            targetUser->addToReplyBuffer(_params[1] + '\n'); // Format.. 
-        }
-    }
-}
-
-void Message::cmdJoin(Server& server) {
-    if (_params.size() == 0 || _params.size() > 2) return ;
-    
-    vector<string> targetList = split(_params[0], ',');
-    if (targetList.size() == 1 && targetList[0] == "0") {
-        vector<string> removeWaitingChannels;
-        cout << _user->getNickname() << " LEAVE FROM ALL CHANNELS" << endl;
-        for (map<string, Channel *>::iterator it = server._allChannel.begin(); it != server._allChannel.end(); ++it) {
-            const int remainUserOfChannel = it->second->deleteUser(_user->getFd());
-            if (remainUserOfChannel == 0) removeWaitingChannels.push_back(it->second->getName());
-        }
-        for (vector<string>::iterator it = removeWaitingChannels.begin(); it != removeWaitingChannels.end(); ++it) {
-            server.deleteChannel(*it);
-        }
-        return ;
-    }
-
-    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
-        string targetChannelName = *it;
-        if (targetChannelName[0] != '#') continue;
-
-        Channel *targetChannel;
-
-        targetChannel = server.findChannelByName(targetChannelName.substr(1, string::npos));
-        if (targetChannel == NULL) {
-            targetChannel = server.addChannel(targetChannelName.substr(1, string::npos));
-        }
-        targetChannel->addUser(_user->getFd(), _user);
-        // channel에 유저 들어옴 알림 -> PRIVATE .. format... :#CHANNEL PRIVMSG #CHANNEL :message
-    }
-}
-
-void Message::cmdPart(Server& server) {
-    if (_params.size() != 1 && _params.size() != 2) return ;
-
-    string partNotiMessage = _user->getNickname();
-    if (_params.size() == 2) partNotiMessage.append(_params[1]);
-    else partNotiMessage = partNotiMessage.append(DEFAULT_PART_MESSAGE);
-
-    vector<string> targetList = split(_params[0], ',');
-    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
-        string targetChannelName = *it;
-
-        if (targetChannelName[0] != '#') continue;
-
-        Channel *targetChannel;
-        targetChannel = server.findChannelByName(targetChannelName.substr(1, string::npos));
-        if (targetChannel == NULL) continue;
-
-        const int remainUserOfChannel = targetChannel->deleteUser(_user->getFd());
-        if (remainUserOfChannel == 0) server.deleteChannel(targetChannelName.substr(1, string::npos));
-        else targetChannel->broadcast(partNotiMessage + '\n');
-    }
+vector<string> Message::getParams() const {
+    return _params;
 }

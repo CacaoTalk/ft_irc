@@ -155,9 +155,9 @@ void Server::handleMessageFromBuffer(User* user) {
 			user->setCmdBuffer(user->getCmdBuffer().substr(1, string::npos));
 			continue;
 		}
-		Message msg(user, user->getCmdBuffer().substr(0, crlfPos));
+		Message msg(user->getCmdBuffer().substr(0, crlfPos));
 		user->setCmdBuffer(user->getCmdBuffer().substr(crlfPos + 1, string::npos));
-		msg.runCommand(*this);
+		runCommand(user, msg);
 	}
 }
 
@@ -171,6 +171,89 @@ size_t Server::checkCmdBuffer(const User *user) {
 	return min(crPos, lfPos);
 }
 
+void Server::runCommand(User* user, Message& msg) {
+    if (msg.getCommand() == "PRIVMSG") cmdPrivmsg(user, msg);
+    else if (msg.getCommand() == "JOIN") cmdJoin(user, msg);
+    else if (msg.getCommand() == "PART") cmdPart(user, msg);
+}
+
+
+void Server::cmdPrivmsg(User* user, Message& msg) {
+    if (msg.getParams().size() != 2) return ;
+
+    vector<string> targetList = msg.split(msg.getParams()[0], ',');
+    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
+        string targetName = *it;
+        if (targetName[0] == '#') {
+            Channel *targetChannel;
+
+            targetChannel = findChannelByName(targetName.substr(1, string::npos));
+            if (targetChannel == NULL) continue;
+            targetChannel->broadcast(msg.getParams()[1] + '\n', user->getFd());
+        } else {
+            User *targetUser;
+
+            targetUser = findClientByNickname(targetName);
+            if (targetUser == NULL) continue;
+            targetUser->addToReplyBuffer(msg.getParams()[1] + '\n'); // Format.. 
+        }
+    }
+}
+
+void Server::cmdJoin(User* user, Message& msg) {
+    if (msg.getParams().size() == 0 || msg.getParams().size() > 2) return ;
+    
+    vector<string> targetList = msg.split(msg.getParams()[0], ',');
+    if (targetList.size() == 1 && targetList[0] == "0") {
+        vector<string> removeWaitingChannels;
+        cout << user->getNickname() << " LEAVE FROM ALL CHANNELS" << endl;
+        for (map<string, Channel *>::iterator it = _allChannel.begin(); it != _allChannel.end(); ++it) {
+            const int remainUserOfChannel = it->second->deleteUser(user->getFd());
+            if (remainUserOfChannel == 0) removeWaitingChannels.push_back(it->second->getName());
+        }
+        for (vector<string>::iterator it = removeWaitingChannels.begin(); it != removeWaitingChannels.end(); ++it) {
+            deleteChannel(*it);
+        }
+        return ;
+    }
+
+    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
+        string targetChannelName = *it;
+        if (targetChannelName[0] != '#') continue;
+
+        Channel *targetChannel;
+
+        targetChannel = findChannelByName(targetChannelName.substr(1, string::npos));
+        if (targetChannel == NULL) {
+            targetChannel = addChannel(targetChannelName.substr(1, string::npos));
+        }
+        targetChannel->addUser(user->getFd(), user);
+        // channel에 유저 들어옴 알림 -> PRIVATE .. format... :#CHANNEL PRIVMSG #CHANNEL :message
+    }
+}
+
+void Server::cmdPart(User* user, Message& msg) {
+    if (msg.getParams().size() != 1 && msg.getParams().size() != 2) return ;
+
+    string partNotiMessage = user->getNickname();
+    if (msg.getParams().size() == 2) partNotiMessage.append(msg.getParams()[1]);
+    else partNotiMessage = partNotiMessage.append(DEFAULT_PART_MESSAGE);
+
+    vector<string> targetList = msg.split(msg.getParams()[0], ',');
+    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
+        string targetChannelName = *it;
+
+        if (targetChannelName[0] != '#') continue;
+
+        Channel *targetChannel;
+        targetChannel = findChannelByName(targetChannelName.substr(1, string::npos));
+        if (targetChannel == NULL) continue;
+
+        const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
+        if (remainUserOfChannel == 0) deleteChannel(targetChannelName.substr(1, string::npos));
+        else targetChannel->broadcast(partNotiMessage + '\n');
+    }
+}
 
 void Server::run() {
 	int numOfEvents;

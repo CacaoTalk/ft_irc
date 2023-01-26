@@ -53,6 +53,11 @@ class Server {
         User* findClientByNickname(const string& nickname);
         Channel* findChannelByName(const string& name);
 
+        void runCommand(User *user, Message& msg);
+        void cmdPrivmsg(User* user, Message& msg);
+        void cmdJoin(User* user, Message& msg);
+        void cmdPart(User* user, Message& msg);
+
         friend class Message;
     public:
         Server(void);

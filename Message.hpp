@@ -12,7 +12,6 @@ class Server;
 class User;
 class Message {
     private:
-        User *_user;
         string _command;
         vector<string> _params;
         
@@ -20,16 +19,20 @@ class Message {
         Message(const Message& packet);
         Message& operator=(const Message& packet);
 
-        vector<string> split(const string& str, const char delimeter);
         void parse(const string& msg);
-        void cmdPrivmsg(Server& server);
-        void cmdJoin(Server& server);
-        void cmdPart(Server& server);
 
     public:
-        Message(User *user, const string& msg);
+        Message(const string& msg);
         ~Message();
-        void runCommand(Server& server);
+
+        // CreateReplyForm
+        // cmdJoin createJoinForm (CRLF)
+        // cmdPart createPartForm
+        // ...
+
+        vector<string> split(const string& str, const char delimeter);
+        string getCommand() const;
+        vector<string> getParams() const;
 };
 
 #endif
