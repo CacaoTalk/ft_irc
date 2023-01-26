@@ -77,7 +77,7 @@ void Message::cmdPrivmsg(Server& server) {
 
             targetUser = server.findClientByNickname(targetName);
             if (targetUser == NULL) continue;
-            targetUser->addToReplyBuffer(_params[1] + '\n');
+            targetUser->addToReplyBuffer(_params[1] + '\n'); // Format.. 
         }
     }
 }
@@ -93,8 +93,6 @@ void Message::cmdJoin(Server& server) {
             const int remainUserOfChannel = it->second->deleteUser(_user->getFd());
             if (remainUserOfChannel == 0) removeWaitingChannels.push_back(it->second->getName());
         }
-        if (removeWaitingChannels.size() == 0) return ;
-
         for (vector<string>::iterator it = removeWaitingChannels.begin(); it != removeWaitingChannels.end(); ++it) {
             server.deleteChannel(*it);
         }
@@ -112,6 +110,7 @@ void Message::cmdJoin(Server& server) {
             targetChannel = server.addChannel(targetChannelName.substr(1, string::npos));
         }
         targetChannel->addUser(_user->getFd(), _user);
+        // channel에 유저 들어옴 알림 -> PRIVATE .. format... :#CHANNEL PRIVMSG #CHANNEL :message
     }
 }
 
