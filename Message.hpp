@@ -4,7 +4,6 @@
 # define MESSAGE_HPP
 # include <string>
 # include <vector>
-# define DEFAULT_PART_MESSAGE " leaved channel"
 
 using namespace std;
 

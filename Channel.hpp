@@ -7,6 +7,9 @@
 # include <set>
 # include "User.hpp"
 # define UNDEFINED_FD -1
+# define DEFAULT_PART_MESSAGE " leaved channel."
+# define NEW_OPERATOR_MESSAGE " is new channel operator."
+
 using namespace std;
 
 
@@ -26,7 +29,7 @@ class Channel {
 
         string getName(void) const;
         void addUser(int clientFd, User *user);
-        int deleteUser(int clientFd);
+        int deleteUser(int clientFd, const char *leaveMsg = DEFAULT_PART_MESSAGE);
         bool isUserOper(int clientFd);
         void broadcast(const string& msg, int ignoreFd = UNDEFINED_FD);
 };
