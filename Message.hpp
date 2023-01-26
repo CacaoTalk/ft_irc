@@ -8,6 +8,7 @@
 using namespace std;
 
 class Server;
+class User;
 class Message {
     private:
         User *_user;
@@ -21,6 +22,7 @@ class Message {
         vector<string> split(const string& str, const char delimeter);
         void parse(const string& msg);
         void cmdPrivmsg(Server& server);
+        void cmdJoin(Server& server);
 
     public:
         Message(User *user, const string& msg);
