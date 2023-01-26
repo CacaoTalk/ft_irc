@@ -63,6 +63,10 @@ class Server {
         void cmdPass(User *user, Message& msg);
         void cmdNick(User *user, Message& msg);
         void cmdUser(User *user, Message& msg);
+        void cmdPing(User *user, Message& msg);
+        void cmdQuit(User *user, Message& msg);
+        void cmdKick(User *user, Message& msg);
+        void cmdNotice(User *user, Message& msg);
 
         friend class Message;
     public:

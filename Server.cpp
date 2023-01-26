@@ -179,7 +179,10 @@ void Server::runCommand(User* user, Message& msg) {
 
 
 void Server::cmdPrivmsg(User* user, Message& msg) {
-    if (msg.getParams().size() != 2) return ;
+    if (msg.getParams().size() != 2) {
+		// reply: 
+		return ;
+	}
 
     vector<string> targetList = msg.split(msg.getParams()[0], ',');
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
@@ -232,8 +235,25 @@ void Server::cmdJoin(User* user, Message& msg) {
     }
 }
 
+// vector<string> channelName, User *user
+
+// join 0, part
+// createPartForm(vector<string> channelName, User *user) (Class Message)
+
+//msg
+// join 0
+// _command, _params.. part
+
+
 void Server::cmdPart(User* user, Message& msg) {
-    if (msg.getParams().size() != 1 && msg.getParams().size() != 2) return ;
+	if (msg.getParams().size() == 0) {
+		// reply: ERR_NEEDMOREPARAMS (461)
+		return ;
+	}
+    if (msg.getParams().size() > 2) {
+		// reply: ERR_NORECIPIENT(411) "<source> <client> :No recipient given (<command>)"
+		return ;
+	}
 
     string partNotiMessage = user->getNickname();
     if (msg.getParams().size() == 2) partNotiMessage.append(msg.getParams()[1]);
@@ -243,15 +263,25 @@ void Server::cmdPart(User* user, Message& msg) {
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
         string targetChannelName = *it;
 
-        if (targetChannelName[0] != '#') continue;
+        if (targetChannelName[0] != '#') {
+			// reply: ERR_NOSUCHCHANNEL (403)
+			continue;
+		}
 
         Channel *targetChannel;
         targetChannel = findChannelByName(targetChannelName.substr(1, string::npos));
-        if (targetChannel == NULL) continue;
-
+        if (targetChannel == NULL) {
+			// reply: ERR_NOSUCHCHANNEL (403)
+			continue;
+		}
+		if (targetChannel->findUser(user->getFd() == NULL)) {
+			// reply: ERR_NOTONCHANNEL (442)
+			continue;
+		}
         const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
+		// reply: "<source> PART <channel>"
+		// 대상: PART한 유저, 해당 채널에 있던 유저
         if (remainUserOfChannel == 0) deleteChannel(targetChannelName.substr(1, string::npos));
-        else targetChannel->broadcast(partNotiMessage + '\n');
     }
 }
 
@@ -283,7 +313,10 @@ void Server::cmdNick(User *user, Message& msg) {
 	
 	user->setNickname(requestNickname);
 	if (!user->getAuth() && !user->getUsername().empty()) {
-		if (user->getPassword() == _password) user->setAuth();
+		if (user->getPassword() == _password) {
+			user->setAuth();
+			// reply: welcome protocol 001-004
+		}
 		else disconnectClient(user->getFd());
 	}
 	//reply: "<source> NICK <nickname>"
@@ -304,7 +337,10 @@ void Server::cmdUser(User *user, Message& msg) {
 	
 	user->setUsername(requestUsername);
 	if (!user->getNickname().empty()) {
-		if (user->getPassword() == _password) user->setAuth();
+		if (user->getPassword() == _password) {
+			user->setAuth();
+			// reply: welcome protocol 001-004
+		}
 		else disconnectClient(user->getFd());
 	}
 	// reply
