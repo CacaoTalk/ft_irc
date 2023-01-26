@@ -274,7 +274,7 @@ void Server::cmdPart(User* user, Message& msg) {
 			// reply: ERR_NOSUCHCHANNEL (403)
 			continue;
 		}
-		if (targetChannel->findUser(user->getFd() == NULL)) {
+		if (targetChannel->findUser(user->getFd()) == NULL) {
 			// reply: ERR_NOTONCHANNEL (442)
 			continue;
 		}
@@ -344,6 +344,84 @@ void Server::cmdUser(User *user, Message& msg) {
 		else disconnectClient(user->getFd());
 	}
 	// reply
+}
+
+void Server::cmdPing(User *user, Message& msg) {
+	if (msg.getParams().size() != 1) return ;
+
+	(void)user;
+	// createPing()
+}
+
+void Server::cmdQuit(User *user, Message& msg) {
+	if (msg.getParams().size() > 1) return ;
+
+	string reason;
+	if (msg.getParams().size() == 1)
+	disconnectClient(user->getFd());
+	// reply: "<source> QUIT :QUIT: <reason>"
+}
+
+// 
+void Server::cmdKick(User *user, Message& msg) {
+	if (msg.getParams().size() < 3) {
+		// ERR_NEEDMOREPARAMS (461)
+	} else if (msg.getParams().size() > 4) {
+		// reply: ERR_NORECIPIENT(411) "<source> <client> :No recipient given (<command>)"
+	}
+	// <channel> <user>{,<user>} [<comments>]
+	
+	// 해당 channel이 존재하는 지 check
+	Channel *ch = findChannelByName(msg.getParams()[0]);
+	if (ch == NULL) {
+		// ERR_NOSUCHCHANNEL (403) : "<client> <channel> :No such channel"
+	}
+	
+	// User가 channel에 있는 지 check
+	if (ch->findUser(user->getFd()) == NULL) {
+		// ERR_NOTONCHANNEL (442) :  "<client> <channel> :You're not on that channel"
+	}
+
+	// User가 해당 channel의 operator인지
+	if (ch->isUserOper(user->getFd()) == false) {
+		// ERR_CHANOPRIVSNEEDED (482) : "<client> <channel> :You're not channel operator"
+	}
+
+	// iteration
+	vector<string> targetUsers = msg.split(msg.getParams()[1], ',');
+	for (vector<string>::const_iterator it = targetUsers.begin(); it != targetUsers.end(); ++it) {
+		// target User가 channel에 존재하는지
+		int targetFd = findClientByNickname(*it)->getFd();
+		if (ch->findUser(targetFd) == NULL) {
+			// ERR_USERNOTINCHANNEL (441) : "<client> <nick> <channel> :They aren't on that channel"
+		}
+		// 존재하면 Kick (그 channel에 deleteUser)
+		int remainUsers = ch->deleteUser(targetFd);
+		// remainUser가 없다면 remove Channel
+		(void)remainUsers;
+	}
+}
+
+void Server::cmdNotice(User *user, Message& msg) {
+	if (msg.getParams().size() != 2) return ;
+
+    vector<string> targetList = msg.split(msg.getParams()[0], ',');
+    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
+        string targetName = *it;
+        if (targetName[0] == '#') {
+            Channel *targetChannel;
+
+            targetChannel = findChannelByName(targetName.substr(1, string::npos));
+            if (targetChannel == NULL) continue;
+            targetChannel->broadcast(msg.getParams()[1] + '\n', user->getFd());
+        } else {
+            User *targetUser;
+
+            targetUser = findClientByNickname(targetName);
+            if (targetUser == NULL) continue;
+            targetUser->addToReplyBuffer(msg.getParams()[1] + '\n'); // Format.. 
+        }
+    }
 }
 
 void Server::run() {
