@@ -46,6 +46,8 @@ class Server {
         void readDataFromClient(const struct kevent& event);
         void sendDataToClient(const struct kevent& event);
         void handleEvent(const struct kevent& event);
+
+        void handleMessageFromBuffer(User* user);
         size_t checkCmdBuffer(const User *user);
 
         User* findClientByNickname(const string& nickname);

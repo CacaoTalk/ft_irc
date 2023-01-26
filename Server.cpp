@@ -106,19 +106,7 @@ void Server::readDataFromClient(const struct kevent& event) {
 	} else {
 		buf[readBytes] = '\0';
 		targetUser->addToCmdBuffer(buf);
-
-		size_t crlfPos;
-		while ((crlfPos = checkCmdBuffer(targetUser)) != string::npos) {
-			cout << "beforeCmdBuffer: " << targetUser->getCmdBuffer() << endl;
-			if (crlfPos == 0) {
-				targetUser->setCmdBuffer(targetUser->getCmdBuffer().substr(1, string::npos));
-				continue;
-			}
-			Message msg(targetUser, targetUser->getCmdBuffer().substr(0, crlfPos));
-			targetUser->setCmdBuffer(targetUser->getCmdBuffer().substr(crlfPos + 1, string::npos));
-			cout << "afterCmdBuffer: " << targetUser->getCmdBuffer() << endl;
-			msg.runCommand(*this);
-		}
+		handleMessageFromBuffer(targetUser);
 	}
 }
 
@@ -157,6 +145,20 @@ void Server::handleEvent(const struct kevent& event) {
 	}
 	else if (event.filter == EVFILT_WRITE)
 		sendDataToClient(event);
+}
+
+void Server::handleMessageFromBuffer(User* user) {
+	size_t crlfPos;
+
+	while ((crlfPos = checkCmdBuffer(user)) != string::npos) {
+		if (crlfPos == 0) {
+			user->setCmdBuffer(user->getCmdBuffer().substr(1, string::npos));
+			continue;
+		}
+		Message msg(user, user->getCmdBuffer().substr(0, crlfPos));
+		user->setCmdBuffer(user->getCmdBuffer().substr(crlfPos + 1, string::npos));
+		msg.runCommand(*this);
+	}
 }
 
 size_t Server::checkCmdBuffer(const User *user) {
