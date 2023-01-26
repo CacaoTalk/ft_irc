@@ -60,6 +60,9 @@ class Server {
         void cmdPrivmsg(User* user, Message& msg);
         void cmdJoin(User* user, Message& msg);
         void cmdPart(User* user, Message& msg);
+        void cmdPass(User *user, Message& msg);
+        void cmdNick(User *user, Message& msg);
+        void cmdUser(User *user, Message& msg);
 
         friend class Message;
     public:

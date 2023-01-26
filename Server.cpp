@@ -255,6 +255,61 @@ void Server::cmdPart(User* user, Message& msg) {
     }
 }
 
+void Server::cmdPass(User *user, Message& msg) {
+	if (msg.getParams().size() != 1) return ;
+
+	// auth -> password ERR {
+
+	// }
+	user->setPassword(msg.getParams()[0]);
+}
+
+void Server::cmdNick(User *user, Message& msg) {
+	if (msg.getParams().size() != 1) {
+		// msg.createForm(source, replyCmd, target, msg)
+		// reply: ERR_NORECIPIENT(411) "<source> <client> :No recipient given (<command>)"
+		return ;
+	}
+	const string requestNickname = msg.getParams()[0];
+
+	if (requestNickname.length() == 0) {
+		// reply: ERR_NONICKNAMEGIVEN(431)
+		return ;
+	}
+	if (findClientByNickname(requestNickname) != NULL) {
+		// reply: ERR_NICKNAMEINUSE(433) "<source> <client> <nick> :Nickname is already in use"
+		return ;
+	}
+	
+	user->setNickname(requestNickname);
+	if (!user->getAuth() && !user->getUsername().empty()) {
+		if (user->getPassword() == _password) user->setAuth();
+		else disconnectClient(user->getFd());
+	}
+	//reply: "<source> NICK <nickname>"
+}
+
+void Server::cmdUser(User *user, Message& msg) {
+	if (msg.getParams().size() != 4) return ; // <username> <hostname> <servername> <realname>
+	if (user->getUsername().length() != 0) { // 이미 set되어 있는 user
+		// reply : ERR_ALREADYREGISTRED(462)
+		return ;
+	}
+	
+	const string requestUsername = msg.getParams()[0]; //: username
+	
+	if (requestUsername.length() == 0) {
+		// reply: ERR_NEEDMOREPARAMS(461)
+	}
+	
+	user->setUsername(requestUsername);
+	if (!user->getNickname().empty()) {
+		if (user->getPassword() == _password) user->setAuth();
+		else disconnectClient(user->getFd());
+	}
+	// reply
+}
+
 void Server::run() {
 	int numOfEvents;
 	
