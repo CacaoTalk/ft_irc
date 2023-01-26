@@ -166,8 +166,8 @@ size_t Server::checkCmdBuffer(const User *user) {
 	const size_t	lfPos = user->getCmdBuffer().find(LF, 0);
 
 	if (crPos == string::npos && lfPos == string::npos) return string::npos;
-	if (crPos == string::npos && lfPos != string::npos) return lfPos;
-	if (crPos != string::npos && lfPos == string::npos) return crPos;
+	if (lfPos == string::npos) return crPos;
+	if (crPos == string::npos) return lfPos;
 	return min(crPos, lfPos);
 }
 
