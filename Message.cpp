@@ -57,6 +57,7 @@ void Message::parse(const string& msg) {
 void Message::runCommand(Server& server) {
     if (_command == "PRIVMSG") cmdPrivmsg(server);
     else if (_command == "JOIN") cmdJoin(server);
+    else if (_command == "PART") cmdPart(server);
 }
 
 void Message::cmdPrivmsg(Server& server) {
@@ -111,5 +112,28 @@ void Message::cmdJoin(Server& server) {
             targetChannel = server.addChannel(targetChannelName.substr(1, string::npos));
         }
         targetChannel->addUser(_user->getFd(), _user);
+    }
+}
+
+void Message::cmdPart(Server& server) {
+    if (_params.size() != 1 && _params.size() != 2) return ;
+
+    string partNotiMessage = _user->getNickname();
+    if (_params.size() == 2) partNotiMessage.append(_params[1]);
+    else partNotiMessage = partNotiMessage.append(DEFAULT_PART_MESSAGE);
+
+    vector<string> targetList = split(_params[0], ',');
+    for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
+        string targetChannelName = *it;
+
+        if (targetChannelName[0] != '#') continue;
+
+        Channel *targetChannel;
+        targetChannel = server.findChannelByName(targetChannelName.substr(1, string::npos));
+        if (targetChannel == NULL) continue;
+
+        const int remainUserOfChannel = targetChannel->deleteUser(_user->getFd());
+        if (remainUserOfChannel == 0) server.deleteChannel(targetChannelName.substr(1, string::npos));
+        else targetChannel->broadcast(partNotiMessage + '\n');
     }
 }

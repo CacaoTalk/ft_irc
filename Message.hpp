@@ -4,6 +4,7 @@
 # define MESSAGE_HPP
 # include <string>
 # include <vector>
+# define DEFAULT_PART_MESSAGE " leaved channel"
 
 using namespace std;
 
@@ -23,6 +24,7 @@ class Message {
         void parse(const string& msg);
         void cmdPrivmsg(Server& server);
         void cmdJoin(Server& server);
+        void cmdPart(Server& server);
 
     public:
         Message(User *user, const string& msg);
