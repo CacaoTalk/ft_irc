@@ -37,6 +37,14 @@ int Channel::deleteUser(int clientFd, const char *leaveMsg) {
     return _userList.size();
 }
 
+User* Channel::findUser(const int clientFd) {
+    map<int, User *>::iterator it;
+
+    it = _userList.find(clientFd);
+    if (it == _userList.end()) return NULL;
+    return it->second;
+}
+
 bool Channel::isUserOper(int clientFd) {
     set<int>::iterator it;
 

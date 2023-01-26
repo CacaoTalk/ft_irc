@@ -30,6 +30,7 @@ class Channel {
         string getName(void) const;
         void addUser(int clientFd, User *user);
         int deleteUser(int clientFd, const char *leaveMsg = DEFAULT_PART_MESSAGE);
+        User* findUser(const int clientFd);
         bool isUserOper(int clientFd);
         void broadcast(const string& msg, int ignoreFd = UNDEFINED_FD);
 };
