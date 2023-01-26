@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include <iostream>
 
-Server::Server(): _fd(-1), _kq(-1) {
+Server::Server(int port, string password): _fd(-1), _kq(-1), _port(port), _password(password) {
 	struct sockaddr_in serverAddr;
 
 	if ((_fd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
@@ -10,7 +10,7 @@ Server::Server(): _fd(-1), _kq(-1) {
 	memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serverAddr.sin_port = htons(6667);
+    serverAddr.sin_port = htons(_port);
 	fcntl(_fd, F_SETFL, O_NONBLOCK);
 	updateEvents(_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 

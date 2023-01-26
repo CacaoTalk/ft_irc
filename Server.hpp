@@ -28,11 +28,14 @@ class Server {
     private:
         int _fd;
         int _kq;
+        int _port;
+        string _password;
         map<int, User *> _allUser;
         map<string, Channel *> _allChannel;
         vector<struct kevent> _eventCheckList;
         struct kevent _waitingEvents[8];
 
+        Server(void);
         Server(const Server& server);
         Server& operator=(const Server& server);
 
@@ -60,7 +63,7 @@ class Server {
 
         friend class Message;
     public:
-        Server(void);
+        Server(int port, string password);
         ~Server();
         void run();
         void shutDown(const string& msg);
