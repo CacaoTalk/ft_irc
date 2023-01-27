@@ -14,22 +14,22 @@ class Message {
         string _command;
         vector<string> _params;
         
-        Message();
         Message(const Message& packet);
         Message& operator=(const Message& packet);
 
         void parse(const string& msg);
 
     public:
+        Message();
         Message(const string& msg);
         ~Message();
 
-        static const string createReplyForm(const string& src, const string& cmd, const string& dstFirst, const string& dstSecond, const string& msg);
+        const string createReplyForm(void);
 
         vector<string> split(const string& str, const char delimeter);
         string getCommand() const;
         vector<string> getParams() const;
+        Message& operator<<(string param);
 };
-
 
 #endif

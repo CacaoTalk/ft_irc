@@ -16,16 +16,14 @@ Message::~Message() {
     _params.clear();
 }
 
-static const string createReplyForm(const string& src, const string& cmd, const string& dstChannel, const string& dstUser, const string& msg) {
-    string reply = "";
+const string Message::createReplyForm(void) {
+    string reply;
 
-    if (!src.empty()) reply += ":" + src;
-    if (!cmd.empty()) reply += " " + cmd;
-    if (!dstChannel.empty()) reply += " " + dstChannel;
-    if (!dstUser.empty()) reply += " " + dstUser;
-    if (!msg.empty()) reply += " " + msg;
-
-    reply += "\r\n";
+    vector<string>::iterator it = _params.begin();
+    reply = (*it);
+    for (it = it + 1; it != _params.end(); ++it) {
+        reply += " "+ (*it);
+    }
     return reply;
 }
 
@@ -74,4 +72,9 @@ string Message::getCommand() const {
 
 vector<string> Message::getParams() const {
     return _params;
+}
+
+Message& Message::operator<<(string param) {
+    _params.push_back(param);
+    return (*this);
 }
