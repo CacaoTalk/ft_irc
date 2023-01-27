@@ -24,14 +24,12 @@ class Message {
         Message(const string& msg);
         ~Message();
 
-        // CreateReplyForm
-        // cmdJoin createJoinForm (CRLF)
-        // cmdPart createPartForm
-        // ...
+        static const string& createReplyForm(const string& src, const string& cmd, const string& dstChannel, const string& dstUser, const string& msg);
 
         vector<string> split(const string& str, const char delimeter);
         string getCommand() const;
         vector<string> getParams() const;
 };
+
 
 #endif
