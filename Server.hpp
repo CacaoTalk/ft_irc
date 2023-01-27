@@ -22,6 +22,28 @@
 # define CR 13
 # define LF 10
 
+// NUMERIC REPLIES
+# define RPL_WELCOME "001"
+
+# define ERR_UNKNOWNERROR "400"
+# define ERR_NOSUCHNICK "401"
+# define ERR_NOSUCHNICK "402"
+# define ERR_NOSUCHCHANNEL "403"
+# define ERR_TOOMANYCHANNELS "405"
+
+# define ERR_ERRONEUSNICKNAME "432"
+# define ERR_NICKNAMEINUSE "433"
+
+# define ERR_USERNOTINCHANNEL "441"
+# define ERR_NOTONCHANNEL "442"
+# define ERR_USERONCHANNEL "443"
+
+# define ERR_NEEDMOREPARAMS "461"
+# define ERR_ALREADYREGISTERED "462"
+# define ERR_PASSWDMISMATCH "464"
+
+# define ERR_CHANNELISFULL "471"
+
 using namespace std;
 
 class Server {
