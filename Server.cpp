@@ -197,7 +197,7 @@ void Server::cmdPrivmsg(User* user, Message& msg) {
         if (targetName[0] == '#') {
             Channel *targetChannel;
 
-            targetChannel = findChannelByName(targetName.substr(1, string::npos));
+            targetChannel = findChannelByName(targetName);
             if (targetChannel == NULL) continue;
             targetChannel->broadcast(msg.getParams()[1] + '\n', user->getFd());
         } else {
@@ -233,9 +233,9 @@ void Server::cmdJoin(User* user, Message& msg) {
 
         Channel *targetChannel;
 
-        targetChannel = findChannelByName(targetChannelName.substr(1, string::npos));
+        targetChannel = findChannelByName(targetChannelName);
         if (targetChannel == NULL) {
-            targetChannel = addChannel(targetChannelName.substr(1, string::npos));
+            targetChannel = addChannel(targetChannelName);
         }
         targetChannel->addUser(user->getFd(), user);
         // channel에 유저 들어옴 알림 -> PRIVATE .. format... :#CHANNEL PRIVMSG #CHANNEL :message
@@ -276,7 +276,7 @@ void Server::cmdPart(User* user, Message& msg) {
 		}
 
         Channel *targetChannel;
-        targetChannel = findChannelByName(targetChannelName.substr(1, string::npos));
+        targetChannel = findChannelByName(targetChannelName);
         if (targetChannel == NULL) {
 			// reply: ERR_NOSUCHCHANNEL (403)
 			continue;
@@ -288,7 +288,7 @@ void Server::cmdPart(User* user, Message& msg) {
         const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
 		// reply: "<source> PART <channel>"
 		// 대상: PART한 유저, 해당 채널에 있던 유저
-        if (remainUserOfChannel == 0) deleteChannel(targetChannelName.substr(1, string::npos));
+        if (remainUserOfChannel == 0) deleteChannel(targetChannelName);
     }
 }
 
@@ -418,7 +418,7 @@ void Server::cmdNotice(User *user, Message& msg) {
         if (targetName[0] == '#') {
             Channel *targetChannel;
 
-            targetChannel = findChannelByName(targetName.substr(1, string::npos));
+            targetChannel = findChannelByName(targetName);
             if (targetChannel == NULL) continue;
             targetChannel->broadcast(msg.getParams()[1] + '\n', user->getFd());
         } else {

@@ -16,12 +16,12 @@ Message::~Message() {
     _params.clear();
 }
 
-static const string& createReplyForm(const string& src, const string& cmd, const string& dstChannel, const string& dstUser, const string& msg) {
+static const string createReplyForm(const string& src, const string& cmd, const string& dstChannel, const string& dstUser, const string& msg) {
     string reply = "";
 
     if (!src.empty()) reply += ":" + src;
     if (!cmd.empty()) reply += " " + cmd;
-    if (!dstChannel.empty()) reply += " #" + dstChannel;
+    if (!dstChannel.empty()) reply += " " + dstChannel;
     if (!dstUser.empty()) reply += " " + dstUser;
     if (!msg.empty()) reply += " " + msg;
 
