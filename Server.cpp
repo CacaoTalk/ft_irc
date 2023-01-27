@@ -175,6 +175,13 @@ void Server::runCommand(User* user, Message& msg) {
     if (msg.getCommand() == "PRIVMSG") cmdPrivmsg(user, msg);
     else if (msg.getCommand() == "JOIN") cmdJoin(user, msg);
     else if (msg.getCommand() == "PART") cmdPart(user, msg);
+	else if (msg.getCommand() == "PASS") cmdPass(user, msg);
+	else if (msg.getCommand() == "NICK") cmdNick(user, msg);
+	else if (msg.getCommand() == "USER") cmdUser(user, msg);
+	else if (msg.getCommand() == "PING") cmdPing(user, msg);
+	else if (msg.getCommand() == "QUIT") cmdQuit(user, msg);
+	else if (msg.getCommand() == "KICK") cmdKick(user, msg);
+	else if (msg.getCommand() == "NOTICE") cmdNotice(user, msg);
 }
 
 
