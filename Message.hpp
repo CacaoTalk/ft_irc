@@ -20,7 +20,7 @@ class Message {
         void parse(const string& msg);
 
     public:
-        Message();
+        Message(void);
         Message(const string& msg);
         ~Message();
 
@@ -29,7 +29,7 @@ class Message {
         vector<string> split(const string& str, const char delimeter);
         string getCommand() const;
         vector<string> getParams() const;
-        Message& operator<<(string param);
+        Message& operator<<(const string param);
 };
 
 #endif

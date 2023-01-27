@@ -33,7 +33,7 @@ class Channel {
         void addUser(int clientFd, User *user);
         int deleteUser(int clientFd);
         User* findUser(const int clientFd);
-        bool isUserOper(int clientFd);
+        bool isUserOper(int clientFd) const;
         void broadcast(const string& msg, int ignoreFd = UNDEFINED_FD);
 };
 

@@ -11,7 +11,7 @@ string Channel::getName(void) const {
 vector<string> Channel::getUserList(void) const {
     vector<string> userList;
 
-    for (map<int, User *>::iterator it = _userList.begin(); it != _userList.end(); ++it) {
+    for (map<int, User *>::const_iterator it = _userList.begin(); it != _userList.end(); ++it) {
         string nickname = "";
 
         if (isUserOper(it->second->getFd())) nickname += '@';
@@ -58,7 +58,7 @@ User* Channel::findUser(const int clientFd) {
     return it->second;
 }
 
-bool Channel::isUserOper(int clientFd) {
+bool Channel::isUserOper(int clientFd) const {
     set<int>::iterator it;
 
     if (_operList.find(clientFd) != _operList.end())
