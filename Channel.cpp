@@ -4,6 +4,10 @@ Channel::Channel(const string& name): _name(name) {}
 
 Channel::~Channel() { }
 
+string Channel::getName(void) const {
+    return _name;
+}
+
 void Channel::addUser(int clientFd, User *user) {
     if (_userList.empty()) _operList.insert(clientFd);
     _userList.insert(pair<int, User *>(clientFd, user));
@@ -22,15 +26,23 @@ int Channel::deleteUser(int clientFd) {
 
     if (_userList.empty()) return 0;
 
-    broadcast(clientName.append(" leave channel."));
     if (_operList.empty()) {
        pair<int, User *> nextOper;
 
        nextOper = *_userList.begin();
        _operList.insert(nextOper.first);
-       broadcast(nextOper.second->getNickname().append(" is new channel operator."));
+       //
+       broadcast(nextOper.second->getNickname().append(NEW_OPERATOR_MESSAGE));
     }
     return _userList.size();
+}
+
+User* Channel::findUser(const int clientFd) {
+    map<int, User *>::iterator it;
+
+    it = _userList.find(clientFd);
+    if (it == _userList.end()) return NULL;
+    return it->second;
 }
 
 bool Channel::isUserOper(int clientFd) {

@@ -9,10 +9,10 @@ else
 endif
 
 ############### TARGET ###############
-NAME	= server
+NAME	= ircserv
 
 ################ FILE ################
-SRCS	= main.cpp Server.cpp Channel.cpp User.cpp
+SRCS	= main.cpp Server.cpp Channel.cpp User.cpp Message.cpp
 
 ################ OBJ #################
 OBJS	= $(SRCS:%.cpp=%.o)

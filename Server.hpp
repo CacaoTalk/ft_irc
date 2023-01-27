@@ -17,6 +17,10 @@
 
 # include "User.hpp"
 # include "Channel.hpp"
+# include "Message.hpp"
+
+# define CR 13
+# define LF 10
 
 using namespace std;
 
@@ -24,18 +28,21 @@ class Server {
     private:
         int _fd;
         int _kq;
+        int _port;
+        string _password;
         map<int, User *> _allUser;
         map<string, Channel *> _allChannel;
         vector<struct kevent> _eventCheckList;
         struct kevent _waitingEvents[8];
 
+        Server(void);
         Server(const Server& server);
         Server& operator=(const Server& server);
 
         void disconnectClient(int clientFd);
         void initKqueue();
         void updateEvents(int socket, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
-        void addChannel(const string& name);
+        Channel* addChannel(const string& name);
         void deleteChannel(const string& name);
 
         void acceptNewClient(void);
@@ -43,9 +50,27 @@ class Server {
         void sendDataToClient(const struct kevent& event);
         void handleEvent(const struct kevent& event);
 
-        User* findClientByNickname(string nickname);
+        void handleMessageFromBuffer(User* user);
+        size_t checkCmdBuffer(const User *user);
+
+        User* findClientByNickname(const string& nickname);
+        Channel* findChannelByName(const string& name);
+
+        void runCommand(User *user, Message& msg);
+        void cmdPrivmsg(User* user, Message& msg);
+        void cmdJoin(User* user, Message& msg);
+        void cmdPart(User* user, Message& msg);
+        void cmdPass(User *user, Message& msg);
+        void cmdNick(User *user, Message& msg);
+        void cmdUser(User *user, Message& msg);
+        void cmdPing(User *user, Message& msg);
+        void cmdQuit(User *user, Message& msg);
+        void cmdKick(User *user, Message& msg);
+        void cmdNotice(User *user, Message& msg);
+
+        friend class Message;
     public:
-        Server(void);
+        Server(int port, string password);
         ~Server();
         void run();
         void shutDown(const string& msg);
