@@ -24,7 +24,7 @@ class Message {
         Message(const string& msg);
         ~Message();
 
-        static const string createReplyForm(const string& src, const string& cmd, const string& dstChannel, const string& dstUser, const string& msg);
+        static const string createReplyForm(const string& src, const string& cmd, const string& dstFirst, const string& dstSecond, const string& msg);
 
         vector<string> split(const string& str, const char delimeter);
         string getCommand() const;
