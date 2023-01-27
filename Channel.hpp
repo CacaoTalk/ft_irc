@@ -5,6 +5,7 @@
 
 # include <map>
 # include <set>
+# include <vector>
 # include "User.hpp"
 # define UNDEFINED_FD -1
 # define DEFAULT_PART_MESSAGE " leaved channel."
@@ -28,6 +29,7 @@ class Channel {
         ~Channel();
 
         string getName(void) const;
+        vector<string> getUserList(void) const;
         void addUser(int clientFd, User *user);
         int deleteUser(int clientFd);
         User* findUser(const int clientFd);
