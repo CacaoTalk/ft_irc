@@ -2,6 +2,8 @@
 // for debug
 #include <iostream>
 
+Message::Message(void) {}
+
 Message::Message(const string& msg) {
     parse(msg);
     // for debug: print command and params
@@ -15,6 +17,19 @@ Message::~Message() {
     _command.clear();
     _params.clear();
 }
+
+const string Message::createReplyForm(void) {
+    string reply;
+
+    vector<string>::iterator it;
+    for (it = _params.begin(); it != _params.end(); ++it) {
+        if (it != _params.begin() && reply != ":") reply += " ";
+        reply += (*it);
+    }
+    reply += "\r\n";
+    return reply;
+}
+
 
 vector<string> Message::split(const string& str, const char delimeter) {
     vector<string> splited;
@@ -60,4 +75,9 @@ string Message::getCommand() const {
 
 vector<string> Message::getParams() const {
     return _params;
+}
+
+Message& Message::operator<<(const string param) {
+    _params.push_back(param);
+    return (*this);
 }

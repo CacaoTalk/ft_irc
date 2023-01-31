@@ -14,24 +14,22 @@ class Message {
         string _command;
         vector<string> _params;
         
-        Message();
         Message(const Message& packet);
         Message& operator=(const Message& packet);
 
         void parse(const string& msg);
 
     public:
+        Message(void);
         Message(const string& msg);
         ~Message();
 
-        // CreateReplyForm
-        // cmdJoin createJoinForm (CRLF)
-        // cmdPart createPartForm
-        // ...
+        const string createReplyForm(void);
 
         vector<string> split(const string& str, const char delimeter);
         string getCommand() const;
         vector<string> getParams() const;
+        Message& operator<<(const string param);
 };
 
 #endif

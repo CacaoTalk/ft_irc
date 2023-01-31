@@ -8,6 +8,19 @@ string Channel::getName(void) const {
     return _name;
 }
 
+vector<string> Channel::getUserList(void) const {
+    vector<string> userList;
+
+    for (map<int, User *>::const_iterator it = _userList.begin(); it != _userList.end(); ++it) {
+        string nickname = "";
+
+        if (isUserOper(it->second->getFd())) nickname += '@';
+        nickname += it->second->getNickname();
+        userList.push_back(nickname);
+    }
+    return userList;
+}
+
 void Channel::addUser(int clientFd, User *user) {
     if (_userList.empty()) _operList.insert(clientFd);
     _userList.insert(pair<int, User *>(clientFd, user));
@@ -45,7 +58,7 @@ User* Channel::findUser(const int clientFd) {
     return it->second;
 }
 
-bool Channel::isUserOper(int clientFd) {
+bool Channel::isUserOper(int clientFd) const {
     set<int>::iterator it;
 
     if (_operList.find(clientFd) != _operList.end())
