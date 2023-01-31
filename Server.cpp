@@ -142,7 +142,7 @@ void Server::handleEvent(const struct kevent& event) {
 	{
 		if (event.ident == (const uintptr_t)_fd)
 			acceptNewClient();
-		else
+		else if (_allUser.find(event.ident) != _allUser.end())
 			readDataFromClient(event);
 	}
 	else if (event.filter == EVFILT_WRITE)
@@ -159,8 +159,7 @@ void Server::handleMessageFromBuffer(User* user) {
 		}
 		Message msg(user->getCmdBuffer().substr(0, crlfPos));
 		user->setCmdBuffer(user->getCmdBuffer().substr(crlfPos + 1, string::npos));
-		runCommand(user, msg);
-		
+		if (!runCommand(user, msg)) break;
 	}
 }
 
