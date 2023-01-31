@@ -13,6 +13,8 @@ string User::getPassword(void) const {
 }
 
 string User::getNickname(void) const {
+    if (_nickname.empty()) return "*";
+    
     return _nickname;
 }
 
