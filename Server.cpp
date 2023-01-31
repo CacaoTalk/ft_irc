@@ -363,15 +363,16 @@ bool Server::cmdNick(User *user, Message& msg) {
 		return true;
 	}
 	const string requestNickname = msg.getParams()[0];
+	const string originNickname = user->getNickname();
 
 	if (requestNickname.length() == 0) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NONICKNAMEGIVEN << user->getNickname() << ERR_NONICKNAMEGIVEN_MSG;
+		replyMsg << ":" << SERVER_HOSTNAME << ERR_NONICKNAMEGIVEN << originNickname << ERR_NONICKNAMEGIVEN_MSG;
 		user->addToReplyBuffer(replyMsg.createReplyForm());
 		return true;
 	}
 
 	if (findClientByNickname(requestNickname) != NULL) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NICKNAMEINUSE << user->getNickname() << requestNickname << ERR_NICKNAMEINUSE_MSG;
+		replyMsg << ":" << SERVER_HOSTNAME << ERR_NICKNAMEINUSE << originNickname << requestNickname << ERR_NICKNAMEINUSE_MSG;
 		user->addToReplyBuffer(replyMsg.createReplyForm());
 		return true;
 	}
@@ -391,7 +392,7 @@ bool Server::cmdNick(User *user, Message& msg) {
 			return false;
 		}
 	}
-	replyMsg << ":" << user->getNickname() << msg.getCommand() << requestNickname;
+	replyMsg << ":" << originNickname << msg.getCommand() << requestNickname;
 	user->addToReplyBuffer(replyMsg.createReplyForm());
 	return true;
 }
