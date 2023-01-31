@@ -102,17 +102,17 @@ class Server {
         User* findClientByNickname(const string& nickname);
         Channel* findChannelByName(const string& name);
 
-        void runCommand(User *user, Message& msg);
-        void cmdPrivmsg(User* user, Message& msg);
-        void cmdJoin(User* user, Message& msg);
-        void cmdPart(User* user, Message& msg);
-        void cmdPass(User *user, Message& msg);
-        void cmdNick(User *user, Message& msg);
-        void cmdUser(User *user, Message& msg);
-        void cmdPing(User *user, Message& msg);
-        void cmdQuit(User *user, Message& msg);
-        void cmdKick(User *user, Message& msg);
-        void cmdNotice(User *user, Message& msg);
+        bool runCommand(User *user, Message& msg);
+        bool cmdPrivmsg(User* user, Message& msg);
+        bool cmdJoin(User* user, Message& msg);
+        bool cmdPart(User* user, Message& msg);
+        bool cmdPass(User *user, Message& msg);
+        bool cmdNick(User *user, Message& msg);
+        bool cmdUser(User *user, Message& msg);
+        bool cmdPing(User *user, Message& msg);
+        bool cmdQuit(User *user, Message& msg);
+        bool cmdKick(User *user, Message& msg);
+        bool cmdNotice(User *user, Message& msg);
 
         friend class Message;
     public:
