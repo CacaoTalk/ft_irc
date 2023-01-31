@@ -142,7 +142,7 @@ void Server::handleEvent(const struct kevent& event) {
 	{
 		if (event.ident == (const uintptr_t)_fd)
 			acceptNewClient();
-		else if (_allUser.find(event.ident) != _allUser.end())
+		else
 			readDataFromClient(event);
 	}
 	else if (event.filter == EVFILT_WRITE)
@@ -159,7 +159,8 @@ void Server::handleMessageFromBuffer(User* user) {
 		}
 		Message msg(user->getCmdBuffer().substr(0, crlfPos));
 		user->setCmdBuffer(user->getCmdBuffer().substr(crlfPos + 1, string::npos));
-		if (!runCommand(user, msg)) break;
+		runCommand(user, msg);
+		
 	}
 }
 
@@ -184,7 +185,7 @@ bool Server::runCommand(User* user, Message& msg) {
 	else if (msg.getCommand() == "QUIT") return cmdQuit(user, msg); 
 	else if (msg.getCommand() == "KICK") return cmdKick(user, msg);
 	else if (msg.getCommand() == "NOTICE") return cmdNotice(user, msg);
-	return false;
+	return true;
 }
 
 
