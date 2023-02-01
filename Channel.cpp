@@ -45,8 +45,7 @@ int Channel::deleteUser(int clientFd) {
 
        nextOper = *_userList.begin();
        _operList.insert(nextOper.first);
-       // is IRC message Format?
-    //    broadcast(nextOper.second->getNickname().append(NEW_OPERATOR_MESSAGE));
+       broadcast(Message() << ":" << clientName << "MODE" << getName() << "+o" << nextOper.second->getNickname());
     }
     return _userList.size();
 }
