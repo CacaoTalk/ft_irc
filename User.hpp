@@ -28,7 +28,7 @@ class User {
         User(int fd);
 		~User();
 		
-		int getFd(void);
+		int getFd(void) const;
 		const string& getPassword(void) const;
 		const string getNickname(void) const;
 		const string& getUsername(void) const;
@@ -52,6 +52,7 @@ class User {
 		void addToMyChannelList(Channel* channel);
 		void deleteFromMyChannelList(Channel* channel);
 		void clearMyChannelList(void);
+		void broadcastToMyChannels(const Message& msg, const int ignoreFd) const;
 };
 
 #endif

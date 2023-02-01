@@ -65,8 +65,8 @@ bool Channel::isUserOper(int clientFd) const {
     return (_operList.find(clientFd) != _operList.end());
 }
 
-void Channel::broadcast(const string& msg, int ignoreFd) {
-    map<int, User *>::iterator it;
+void Channel::broadcast(const string& msg, int ignoreFd) const {
+    map<int, User *>::const_iterator it;
 
     for(it = _userList.begin(); it != _userList.end(); ++it) {
         if (it->first == ignoreFd) continue;
@@ -75,8 +75,8 @@ void Channel::broadcast(const string& msg, int ignoreFd) {
     }
 }
 
-void Channel::broadcast(const Message& msg, int ignoreFd) {
-    map<int, User *>::iterator it;
+void Channel::broadcast(const Message& msg, int ignoreFd) const {
+    map<int, User *>::const_iterator it;
 
     for(it = _userList.begin(); it != _userList.end(); ++it) {
         if (it->first == ignoreFd) continue;
