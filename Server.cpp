@@ -155,7 +155,7 @@ Channel* Server::addChannel(const string& name) {
 	Channel *ch;
 
 	ch = new Channel(name);
-	_allChannel.insert(pair<string, Channel *>(name, ch));
+	_allChannel.insert(make_pair(name, ch));
 	cout << "channel added: " << name << '\n';
 	return ch;
 }
