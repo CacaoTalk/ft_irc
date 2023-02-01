@@ -39,16 +39,16 @@ bool Command::cmdPrivmsg(Server& server, User *user, const Message& msg) {
 				user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG);
 				continue;
 			}
-            targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << targetChannel->getName() << msg.getParams()[1], user->getFd());
+            targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << targetChannel->getName() << ":" << msg.getParams()[1], user->getFd());
         } else {
             User *targetUser;
 
             targetUser = server.findClientByNickname(targetName);
             if (targetUser == NULL) {
-				user->addToReplyBuffer(Message() << string(":").append(SERVER_HOSTNAME) << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG);
+				user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG);
 				continue;
 			}
-            targetUser->addToReplyBuffer(Message() << ":" << user->getNickname() << msg.getCommand() << targetUser->getNickname() << msg.getParams()[1]);
+            targetUser->addToReplyBuffer(Message() << ":" << user->getNickname() << msg.getCommand() << targetUser->getNickname() << ":" << msg.getParams()[1]);
         }
     }
 	return true;
