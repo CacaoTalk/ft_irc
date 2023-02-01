@@ -1,24 +1,33 @@
+#include <unistd.h>
 #include "User.hpp"
+#include "Channel.hpp"
+#include "Message.hpp"
 
 User::User(int fd) : _fd(fd), _auth(false) { }
 
-User::~User() { }
+User::~User() {
+    close(_fd);
+    for (vector<Channel *>::iterator it = _myChannelList.begin(); it != _myChannelList.end(); ++it) {
+        (*it)->deleteUser(_fd);
+    }
+    _myChannelList.clear();
+}
 
 int User::getFd(void) {
     return _fd;
 }
 
-string User::getPassword(void) const {
+const string& User::getPassword(void) const {
     return _password;
 }
 
-string User::getNickname(void) const {
+const string User::getNickname(void) const {
     if (_nickname.empty()) return "*";
     
     return _nickname;
 }
 
-string User::getUsername(void) const {
+const string& User::getUsername(void) const {
     return _username;
 }
 
@@ -26,20 +35,16 @@ bool User::getAuth(void) const {
     return _auth;
 }
 
-string User::getCmdBuffer(void) {
+const string& User::getCmdBuffer(void) const {
     return _cmdBuffer;
 }
 
-const string User::getCmdBuffer(void) const {
-    return _cmdBuffer;
-}
-
-string User::getReplyBuffer(void) {
+const string& User::getReplyBuffer(void) const {
     return _replyBuffer;
 }
 
-const string User::getReplyBuffer(void) const {
-    return _replyBuffer;
+const vector<Channel *>& User::getMyAllChannel(void) const {
+    return _myChannelList;
 }
 
 void User::setPassword(const string& pwd) {
@@ -54,7 +59,7 @@ void User::setUsername(const string& username) {
     _username = username;
 }
 
-void User::setAuth() {
+void User::setAuth(void) {
     _auth = true;
 }
 
@@ -66,10 +71,34 @@ void User::setReplyBuffer(const string& str) {
     _replyBuffer = str;
 }
 
+void User::setReplyBuffer(const Message& msg) {
+    _replyBuffer = msg.createReplyForm();
+}
+
 void User::addToCmdBuffer(const string& str) {
     _cmdBuffer.append(str);
 }
 
 void User::addToReplyBuffer(const string& str) {
     _replyBuffer.append(str);
+}
+
+void User::addToReplyBuffer(const Message& msg) {
+    _replyBuffer.append(msg.createReplyForm());
+}
+
+void User::addToMyChannelList(Channel *channel) {
+    _myChannelList.push_back(channel);
+}
+
+void User::deleteFromMyChannelList(Channel *channel) {
+    vector<Channel *>::iterator it = find(_myChannelList.begin(), _myChannelList.end(), channel);
+
+    if (it == _myChannelList.end()) return ;
+
+    _myChannelList.erase(it);
+}
+
+void User::clearMyChannelList(void) {
+    _myChannelList.clear();
 }

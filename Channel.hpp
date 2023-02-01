@@ -13,6 +13,7 @@
 
 using namespace std;
 
+class Message;
 
 class Channel {
     private:
@@ -28,13 +29,15 @@ class Channel {
         Channel(const string& name);
         ~Channel();
 
-        string getName(void) const;
-        vector<string> getUserList(void) const;
+        const string& getName(void) const;
+        const vector<string> getUserList(void) const;
+
         void addUser(int clientFd, User *user);
         int deleteUser(int clientFd);
         User* findUser(const int clientFd);
         bool isUserOper(int clientFd) const;
         void broadcast(const string& msg, int ignoreFd = UNDEFINED_FD);
+        void broadcast(const Message& msg, int ignoreFd = UNDEFINED_FD);
 };
 
 #endif

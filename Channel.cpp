@@ -1,14 +1,15 @@
 #include "Channel.hpp"
+#include "Message.hpp"
 
 Channel::Channel(const string& name): _name(name) {}
 
 Channel::~Channel() { }
 
-string Channel::getName(void) const {
+const string& Channel::getName(void) const {
     return _name;
 }
 
-vector<string> Channel::getUserList(void) const {
+const vector<string> Channel::getUserList(void) const {
     vector<string> userList;
 
     for (map<int, User *>::const_iterator it = _userList.begin(); it != _userList.end(); ++it) {
@@ -23,7 +24,7 @@ vector<string> Channel::getUserList(void) const {
 
 void Channel::addUser(int clientFd, User *user) {
     if (_userList.empty()) _operList.insert(clientFd);
-    _userList.insert(pair<int, User *>(clientFd, user));
+    _userList.insert(make_pair(clientFd, user));
 }
 
 int Channel::deleteUser(int clientFd) {
@@ -44,8 +45,8 @@ int Channel::deleteUser(int clientFd) {
 
        nextOper = *_userList.begin();
        _operList.insert(nextOper.first);
-       //
-       broadcast(nextOper.second->getNickname().append(NEW_OPERATOR_MESSAGE));
+       // is IRC message Format?
+    //    broadcast(nextOper.second->getNickname().append(NEW_OPERATOR_MESSAGE));
     }
     return _userList.size();
 }
@@ -61,10 +62,7 @@ User* Channel::findUser(const int clientFd) {
 bool Channel::isUserOper(int clientFd) const {
     set<int>::iterator it;
 
-    if (_operList.find(clientFd) != _operList.end())
-        return true;
-    else
-        return false;
+    return (_operList.find(clientFd) != _operList.end());
 }
 
 void Channel::broadcast(const string& msg, int ignoreFd) {
@@ -74,5 +72,15 @@ void Channel::broadcast(const string& msg, int ignoreFd) {
         if (it->first == ignoreFd) continue;
 
         it->second->addToReplyBuffer(msg);
+    }
+}
+
+void Channel::broadcast(const Message& msg, int ignoreFd) {
+    map<int, User *>::iterator it;
+
+    for(it = _userList.begin(); it != _userList.end(); ++it) {
+        if (it->first == ignoreFd) continue;
+
+        it->second->addToReplyBuffer(msg.createReplyForm());
     }
 }

@@ -1,5 +1,5 @@
-#ifndef ERROR_HPP
-# define ERROR_HPP
+#ifndef REPLY_HPP
+# define REPLY_HPP
 
 // NUMERIC REPLIES
 # define RPL_WELCOME "001"

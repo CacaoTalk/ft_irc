@@ -20,13 +20,15 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    try {
-        int port = validatePort(argv[1]);
-        Server ircServer(port, argv[2]);
+    int port = validatePort(argv[1]);
+    Server ircServer(port, argv[2]);
 
+    cout << "Server created" << endl;
+    try {
         ircServer.run();    
     } catch(exception &e) {
         e.what();
+        ircServer.shutDown("Error while running server");
     }
 
     return 0;

@@ -25,41 +25,30 @@ bool Command::runCommand(Server& server, User *user, const Message& msg) {
 
 bool Command::cmdPrivmsg(Server& server, User *user, const Message& msg) {
     if (msg.paramSize() < 2) {
-		Message replyMsg;
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NORECIPIENT << user->getNickname() << ERR_NORECIPIENT_MSG << "(PRIVMSG)";
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NORECIPIENT << user->getNickname() << ERR_NORECIPIENT_MSG << "(PRIVMSG)");
 		return true;
 	}
 
-    const vector<string> targetList = Message::split(msg[0], ',');
+    const vector<string> targetList = Message::split(msg.getParams()[0], ',');
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
         string targetName = *it;
         if (targetName[0] == '#') {
-            Channel *targetChannel;
+            Channel *targetChannel = server.findChannelByName(targetName);
 
-            targetChannel = server.findChannelByName(targetName);
             if (targetChannel == NULL) {
-				Message replyMsg;
-				replyMsg << ":" << SERVER_HOSTNAME << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG;
-				user->addToReplyBuffer(replyMsg);
+				user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG);
 				continue;
 			}
-			Message replyMsg;
-			replyMsg << ":" << user->getNickname() << msg.getCommand() << targetChannel->getName() << msg[1];
-            targetChannel->broadcast(replyMsg, user->getFd());
+            targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << targetChannel->getName() << msg.getParams()[1], user->getFd());
         } else {
             User *targetUser;
 
             targetUser = server.findClientByNickname(targetName);
             if (targetUser == NULL) {
-				Message replyMsg;
-				replyMsg << string(":").append(SERVER_HOSTNAME) << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG;
-				user->addToReplyBuffer(replyMsg);
+				user->addToReplyBuffer(Message() << string(":").append(SERVER_HOSTNAME) << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG);
 				continue;
 			}
-			Message replyMsg;
-			replyMsg << ":" << user->getNickname() << msg.getCommand() << targetUser->getNickname() << msg[1];
-            targetUser->addToReplyBuffer(replyMsg);
+            targetUser->addToReplyBuffer(Message() << ":" << user->getNickname() << msg.getCommand() << targetUser->getNickname() << msg.getParams()[1]);
         }
     }
 	return true;
@@ -67,30 +56,23 @@ bool Command::cmdPrivmsg(Server& server, User *user, const Message& msg) {
 
 bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
     if (msg.paramSize() == 0) {
-		Message replyMsg;
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
     
-    const vector<string> targetList = Message::split(msg[0], ',');
+    const vector<string> targetList = Message::split(msg.getParams()[0], ',');
     if (targetList.size() == 1 && targetList[0] == "0") {
         vector<string> removeWaitingChannels;
-        cout << user->getNickname() << " LEAVE FROM ALL CHANNELS" << endl;
-		const map<string, Channel *>& chs = server.getAllChannel();
-        for (map<string, Channel *>::const_iterator it = chs.begin(); it != chs.end(); ++it) {
-			Channel *targetChannel = it->second;
-			User *userInChannel = targetChannel->findUser(user->getFd());
-
-			if (userInChannel == NULL) continue;
+		const vector<Channel *>& chs = user->getMyAllChannel();
+        for (vector<Channel *>::const_iterator it = chs.begin(); it != chs.end(); ++it) {
+			Channel *targetChannel = *it;
 			
             const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
-			Message replyMsg;
-			replyMsg << user->getNickname() << "PART" << targetChannel->getName();
-			user->addToReplyBuffer(replyMsg);
-			targetChannel->broadcast(replyMsg);
+			user->addToReplyBuffer(Message() << user->getNickname() << "PART" << targetChannel->getName());
+			targetChannel->broadcast(Message() << user->getNickname() << "PART" << targetChannel->getName());
             if (remainUserOfChannel == 0) removeWaitingChannels.push_back(targetChannel->getName());
         }
+		user->clearMyChannelList();
         for (vector<string>::iterator it = removeWaitingChannels.begin(); it != removeWaitingChannels.end(); ++it) {
             server.deleteChannel(*it);
         }
@@ -100,9 +82,7 @@ bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
         string targetChannelName = *it;
         if (targetChannelName[0] != '#') {
-			Message replyMsg;
-			replyMsg << ":" << SERVER_HOSTNAME << ERR_NOSUCHCHANNEL << user->getNickname() << targetChannelName << ERR_NOSUCHCHANNEL_MSG;
-			user->addToReplyBuffer(replyMsg);
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHCHANNEL << user->getNickname() << targetChannelName << ERR_NOSUCHCHANNEL_MSG);
 			continue;
 		}
 
@@ -114,6 +94,7 @@ bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
         } else if (targetChannel->findUser(user->getFd()) != NULL) continue;
 		
         targetChannel->addUser(user->getFd(), user);
+		user->addToMyChannelList(targetChannel);
 		Message replyMsg[3];
 		replyMsg[0] << ":" << user->getNickname() << msg.getCommand() << ":" << targetChannelName;
 		replyMsg[1] << ":" << SERVER_HOSTNAME << RPL_NAMREPLY << user->getNickname() << "=" << targetChannelName << ":";
@@ -131,19 +112,17 @@ bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
 
 bool Command::cmdPart(Server& server, User *user, const Message& msg) {
 	if (msg.paramSize() < 1) {
-		Message replyMsg;
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
 
     string partNotiMessage;
     if (msg.paramSize() >= 2) {
 		partNotiMessage.append(":");
-		partNotiMessage.append(msg[1]);
+		partNotiMessage.append(msg.getParams()[1]);
 	}
 
-    const vector<string> targetList = Message::split(msg[0], ',');
+    const vector<string> targetList = Message::split(msg.getParams()[0], ',');
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
         string targetChannelName = *it;
 
@@ -151,64 +130,50 @@ bool Command::cmdPart(Server& server, User *user, const Message& msg) {
         targetChannel = server.findChannelByName(targetChannelName);
 
         if (targetChannel == NULL) {
-			Message replyMsg;
-			replyMsg << ":" << SERVER_HOSTNAME << ERR_NOSUCHCHANNEL << user->getNickname() << targetChannelName << ERR_NOSUCHCHANNEL_MSG;
-			user->addToReplyBuffer(replyMsg);
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHCHANNEL << user->getNickname() << targetChannelName << ERR_NOSUCHCHANNEL_MSG);
 			continue;
 		}
 		if (targetChannel->findUser(user->getFd()) == NULL) {
-			Message replyMsg;
-			replyMsg << ":" << SERVER_HOSTNAME << ERR_NOTONCHANNEL << user->getNickname() << targetChannelName << ERR_NOTONCHANNEL_MSG;
-			user->addToReplyBuffer(replyMsg);
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOTONCHANNEL << user->getNickname() << targetChannelName << ERR_NOTONCHANNEL_MSG);
 			continue;
 		}
         const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
-		Message replyMsg;
-		replyMsg << user->getNickname() << "PART" << targetChannelName;
-		user->addToReplyBuffer(replyMsg);
-		targetChannel->broadcast(replyMsg);
+		user->deleteFromMyChannelList(targetChannel);
+		user->addToReplyBuffer(Message() << user->getNickname() << "PART" << targetChannelName);
+		targetChannel->broadcast(Message() << user->getNickname() << "PART" << targetChannelName);
         if (remainUserOfChannel == 0) server.deleteChannel(targetChannelName);
     }
 	return true;
 }
 
 bool Command::cmdPass(User *user, const Message& msg) {
-	Message replyMsg;
-	
 	if (msg.paramSize() < 1) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
 	if (user->getAuth()) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_ALREADYREGISTERED << user->getNickname() << ERR_ALREADYREGISTERED_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_ALREADYREGISTERED << user->getNickname() << ERR_ALREADYREGISTERED_MSG);
 		return true;
 	}
-	user->setPassword(msg[0]);
+	user->setPassword(msg.getParams()[0]);
 	return true;
 }
 
 bool Command::cmdNick(Server& server, User *user, const Message& msg) {
-	Message replyMsg;
-	
 	if (msg.paramSize() < 1) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
-	const string requestNickname = msg[0];
+	const string requestNickname = msg.getParams()[0];
 	const string originNickname = user->getNickname();
 
 	if (requestNickname.length() == 0) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NONICKNAMEGIVEN << originNickname << ERR_NONICKNAMEGIVEN_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NONICKNAMEGIVEN << originNickname << ERR_NONICKNAMEGIVEN_MSG);
 		return true;
 	}
 
 	if (server.findClientByNickname(requestNickname) != NULL) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NICKNAMEINUSE << originNickname << requestNickname << ERR_NICKNAMEINUSE_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NICKNAMEINUSE << originNickname << requestNickname << ERR_NICKNAMEINUSE_MSG);
 		return true;
 	}
 	
@@ -216,42 +181,33 @@ bool Command::cmdNick(Server& server, User *user, const Message& msg) {
 	if (!user->getAuth() && !user->getUsername().empty()) {
 		if (server.checkPassword(user->getPassword())) {
 			user->setAuth();
-			replyMsg << ":" << SERVER_HOSTNAME << RPL_WELCOME << user->getNickname() << ":Welcome to the" << SERVER_HOSTNAME <<  "Network" << requestNickname;
-			user->addToReplyBuffer(replyMsg);
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << RPL_WELCOME << user->getNickname() << ":Welcome to the" << SERVER_HOSTNAME <<  "Network" << requestNickname);
 			return true;
-		}
-		else {
-			replyMsg << ":" << SERVER_HOSTNAME << ERR_PASSWDMISMATCH << user->getNickname() << ERR_PASSWDMISMATCH_MSG;
-			user->addToReplyBuffer(replyMsg);
+		} else {
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_PASSWDMISMATCH << user->getNickname() << ERR_PASSWDMISMATCH_MSG);
 			server.disconnectClient(user->getFd());
 			return false;
 		}
 	}
-	replyMsg << ":" << originNickname << msg.getCommand() << requestNickname;
-	user->addToReplyBuffer(replyMsg);
+	user->addToReplyBuffer(Message() << ":" << originNickname << msg.getCommand() << requestNickname);
 	return true;
 }
 
 bool Command::cmdUser(Server& server, User *user, const Message& msg) {
-	Message replyMsg;
-	
 	if (msg.paramSize() < 4) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
 	
 	if (user->getAuth()) { // 이미 auth되어 있는 user
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_ALREADYREGISTERED << user->getNickname() << ERR_ALREADYREGISTERED_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_ALREADYREGISTERED << user->getNickname() << ERR_ALREADYREGISTERED_MSG);
 		return true;
 	}
 	
-	const string requestUserNickname = msg[0]; //username
+	const string requestUserNickname = msg.getParams()[0]; //username
 	
 	if (requestUserNickname.length() == 0) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
 	
@@ -259,13 +215,11 @@ bool Command::cmdUser(Server& server, User *user, const Message& msg) {
 	if (!user->getNickname().empty()) {
 		if (server.checkPassword(user->getPassword())) {
 			user->setAuth();
-			replyMsg << ":" << SERVER_HOSTNAME << RPL_WELCOME << user->getNickname() << ":Welcome to the" << SERVER_HOSTNAME <<  "Network" << requestUserNickname;
-			user->addToReplyBuffer(replyMsg);
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << RPL_WELCOME << user->getNickname() << ":Welcome to the" << SERVER_HOSTNAME <<  "Network" << requestUserNickname);
 			return true;
 		}
 		else {
-			replyMsg << ":" << SERVER_HOSTNAME << ERR_PASSWDMISMATCH << user->getNickname() << ERR_PASSWDMISMATCH_MSG;
-			user->addToReplyBuffer(replyMsg);
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_PASSWDMISMATCH << user->getNickname() << ERR_PASSWDMISMATCH_MSG);
 			server.disconnectClient(user->getFd());
 			return false;
 		}
@@ -274,111 +228,81 @@ bool Command::cmdUser(Server& server, User *user, const Message& msg) {
 }
 
 bool Command::cmdPing(User *user, const Message& msg) {
-	Message replyMsg;
-
 	if (msg.paramSize() < 1) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
 
-	if (msg[0].empty()) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NOORIGIN << user->getNickname() << ERR_NOORIGIN_MSG;
-		user->addToReplyBuffer(replyMsg);
+	if (msg.getParams()[0].empty()) {
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOORIGIN << user->getNickname() << ERR_NOORIGIN_MSG);
 		return true;
 	}
-	
-	replyMsg << ":" << SERVER_HOSTNAME << "PONG" << SERVER_HOSTNAME << msg[0];
-	user->addToReplyBuffer(replyMsg);
+
+	user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << "PONG" << SERVER_HOSTNAME << msg.getParams()[0]);
 	return true;
 }
 
 bool Command::cmdQuit(Server& server, User *user, const Message& msg) {
 	if (msg.paramSize() < 1) {
-		Message replyMsg;
-
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
 
 	string reason = ":Quit:";
-	if (msg.paramSize() == 1) reason += msg[0];
+	if (msg.paramSize() == 1) reason += msg.getParams()[0];
 	else reason += "leaving";
-	
-	Message replyMsg;
-	replyMsg << ":" << user->getNickname() << msg.getCommand() << reason;
-	
+		
 	int clientFd = user->getFd();
 	const map<string, Channel *>& chs = server.getAllChannel();
 	map<string, Channel *>::const_iterator it;
 	for (it = chs.begin(); it != chs.end(); ++it) {
 		if (it->second->findUser(clientFd) != NULL) {
-			it->second->broadcast(replyMsg, clientFd);
+			it->second->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << reason, clientFd);
 		}
 	}
 	server.disconnectClient(clientFd);
 	return false;
 }
 
-// 
 bool Command::cmdKick(Server& server, User *user, const Message& msg) {
-	if (msg.paramSize() < 2) {
-		Message replyMsg;
-		
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG;
-		user->addToReplyBuffer(replyMsg);
-	}
+	if (msg.paramSize() < 2)
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 
 	string reason;
 	if (msg.paramSize() >= 3) {
 		reason.append(":");
-		reason.append(msg[2]);
+		reason.append(msg.getParams()[2]);
 	}
 	
 	// 해당 channel이 존재하는 지 check
-	Channel *targetChannel = server.findChannelByName(msg[0]);
+	Channel *targetChannel = server.findChannelByName(msg.getParams()[0]);
 	if (targetChannel == NULL) {
-		Message replyMsg;
-
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NOSUCHCHANNEL << user->getNickname() << msg[0] << ERR_NOSUCHCHANNEL_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHCHANNEL << user->getNickname() << msg.getParams()[0] << ERR_NOSUCHCHANNEL_MSG);
 		return true;
 	}
 	
 	// User가 channel에 있는 지 check
 	if (targetChannel->findUser(user->getFd()) == NULL) {\
-		Message replyMsg;
-
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NOTONCHANNEL << user->getNickname() << msg[0] << ERR_NOTONCHANNEL_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOTONCHANNEL << user->getNickname() << msg.getParams()[0] << ERR_NOTONCHANNEL_MSG);
 		return true;
 	}
 
 	// User가 해당 channel의 operator인지
 	if (targetChannel->isUserOper(user->getFd()) == false) {
-		Message replyMsg;
-
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_CHANOPRIVSNEEDED << user->getNickname() << msg[0] << ERR_CHANOPRIVSNEEDED_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_CHANOPRIVSNEEDED << user->getNickname() << msg.getParams()[0] << ERR_CHANOPRIVSNEEDED_MSG);
 		return true;
 	}
 
 	// iteration
-	const vector<string> targetUsers = Message::split(msg[1], ',');
+	const vector<string> targetUsers = Message::split(msg.getParams()[1], ',');
 	for (vector<string>::const_iterator it = targetUsers.begin(); it != targetUsers.end(); ++it) {
 		// target User가 channel에 존재하는지
 		int targetFd = server.findClientByNickname(*it)->getFd();
-		if (targetChannel->findUser(targetFd) == NULL) {
-			Message replyMsg;
-			replyMsg << ":" << SERVER_HOSTNAME << ERR_USERNOTINCHANNEL << user->getNickname() << *it << msg[0] << ERR_USERNOTINCHANNEL_MSG;
-			user->addToReplyBuffer(replyMsg);
-		}
+		if (targetChannel->findUser(targetFd) == NULL)
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_USERNOTINCHANNEL << user->getNickname() << *it << msg.getParams()[0] << ERR_USERNOTINCHANNEL_MSG);
+
 		// 존재하면 Kick (그 channel에 deleteUser)
-		Message replyMsg;
-		
-		replyMsg << ":" << user->getNickname() << msg.getCommand() << msg[0] << *it << ":" << user->getNickname();
-		targetChannel->broadcast(replyMsg);
+		targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << msg.getParams()[0] << *it << ":" << user->getNickname());
 		const int remainUsers = targetChannel->deleteUser(targetFd);
 		if (remainUsers == 0) server.deleteChannel(targetChannel->getName());
 	}
@@ -386,20 +310,16 @@ bool Command::cmdKick(Server& server, User *user, const Message& msg) {
 }
 
 bool Command::cmdNotice(Server& server, User *user, const Message& msg) {
-	Message replyMsg;
-	
 	if (msg.paramSize() == 0) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NORECIPIENT << user->getNickname() << ERR_NORECIPIENT_MSG << "(NOTICE)";
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NORECIPIENT << user->getNickname() << ERR_NORECIPIENT_MSG << "(NOTICE)");
 		return true;
 	}
 	if (msg.paramSize() == 1) {
-		replyMsg << ":" << SERVER_HOSTNAME << ERR_NOTEXTTOSEND << user->getNickname() << msg.getCommand() << ERR_NOTEXTTOSEND_MSG;
-		user->addToReplyBuffer(replyMsg);
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOTEXTTOSEND << user->getNickname() << msg.getCommand() << ERR_NOTEXTTOSEND_MSG);
 		return true;
 	}
 
-    const vector<string> targetList = Message::split(msg[0], ',');
+    const vector<string> targetList = Message::split(msg.getParams()[0], ',');
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
         string targetName = *it;
         if (targetName[0] == '#') {
@@ -407,15 +327,13 @@ bool Command::cmdNotice(Server& server, User *user, const Message& msg) {
 
             targetChannel = server.findChannelByName(targetName);
             if (targetChannel == NULL) continue;
-			// FIXME: IRC Message format?
-            // targetChannel->broadcast(msg[1] + '\n', user->getFd());
+            targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << targetName << ":" << msg.getParams()[1]);
         } else {
             User *targetUser;
 
             targetUser = server.findClientByNickname(targetName);
             if (targetUser == NULL) continue;
-			// FIXME: IRC Message format?
-            // targetUser->addToReplyBuffer(msg[1] + '\n'); // Format.. 
+            targetUser->addToReplyBuffer(Message() << ":" << user->getNickname() << msg.getCommand() << targetName << ":" << msg.getParams()[1]);
         }
     }
 	return true;
