@@ -40,6 +40,7 @@ bool Command::cmdPrivmsg(Server& server, User *user, const Message& msg) {
 				continue;
 			}
             targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << targetChannel->getName() << ":" << msg.getParams()[1], user->getFd());
+			if (msg.getParams()[1][0] == '!') targetChannel->executeBot(msg.getParams()[1]);
         } else {
             User *targetUser;
 
