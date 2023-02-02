@@ -6,6 +6,7 @@
 # include <string>
 # include <map>
 # include <set>
+# include <vector>
 # include <cstdlib>
 # include <iostream>
 
@@ -21,10 +22,10 @@ class Bot {
     public:
         Bot(void);
         ~Bot();
-        void addMenu(const string& menu);
-        void delteMenu(const string& menu);
+        void addMenu(vector<string> params);
+        void deleteMenu(vector<string> params);
         const string showMenu(void) const;
-        const string pickMenu(const set<string> menu) const;
+        const string pickMenu(void) const;
 };
 
 #endif

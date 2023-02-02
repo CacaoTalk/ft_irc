@@ -5,16 +5,19 @@ Bot::Bot() {
 }
 
 Bot::~Bot() {
-
+	_menuList.clear();
 }
 
-
-void Bot::addMenu(const string& menu) {
-	_menuList.insert(menu);
+void Bot::addMenu(vector<string> params) {
+	for (vector<string>::size_type i=1; i<params.size(); i++) {
+		_menuList.insert(params[i]);
+	}
 }
 
-void Bot::delteMenu(const string& menu) {
-	_menuList.erase(menu);
+void Bot::deleteMenu(vector<string> params) {
+	for (vector<string>::size_type i=1; i<params.size(); i++) {
+		_menuList.erase(params[i]);
+	}
 }
 
 const string Bot::showMenu(void) const {
@@ -23,12 +26,13 @@ const string Bot::showMenu(void) const {
 
 	reply = "MENU : ";
 	for (it = _menuList.begin(); it != _menuList.end(); ++it) {
-		reply += (*it) + ", ";
+		if (it != _menuList.begin()) reply += ", ";
+		reply += (*it);
 	}
 	return reply;
 }
 
-const string Bot::pickMenu(const set<string> menu) const {
+const string Bot::pickMenu(void) const {
 	if (_menuList.empty()) {
 		return ("Empty List");
 	}
