@@ -212,7 +212,7 @@ bool Command::cmdUser(Server& server, User *user, const Message& msg) {
 	}
 	
 	user->setUsername(requestUserNickname);
-	if (!user->getNickname().empty()) {
+	if (user->getNickname() != "*") {
 		if (server.checkPassword(user->getPassword())) {
 			user->setAuth();
 			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << RPL_WELCOME << user->getNickname() << ":Welcome to the" << SERVER_HOSTNAME <<  "Network" << requestUserNickname);
