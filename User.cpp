@@ -13,7 +13,7 @@ User::~User() {
     _myChannelList.clear();
 }
 
-int User::getFd(void) {
+int User::getFd(void) const {
     return _fd;
 }
 
@@ -101,4 +101,12 @@ void User::deleteFromMyChannelList(Channel *channel) {
 
 void User::clearMyChannelList(void) {
     _myChannelList.clear();
+}
+
+void User::broadcastToMyChannels(const Message& msg, const int ignoreFd) const {
+    const vector<Channel *>& chs = getMyAllChannel();
+
+	for (vector<Channel *>::const_iterator it = chs.begin(); it != chs.end(); ++it) {
+		(*it)->broadcast(msg, ignoreFd);
+	}
 }

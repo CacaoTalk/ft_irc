@@ -59,6 +59,7 @@ void Server::readDataFromClient(const struct kevent& event) {
 	readBytes = read(event.ident, buf, 512);
 	if (readBytes <= 0) {
 		cerr << "client read error!" << endl;
+		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getNickname() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);
 	} else {
 		buf[readBytes] = '\0';
@@ -76,6 +77,7 @@ void Server::sendDataToClient(const struct kevent& event) {
 	readBytes = write(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length());
 	if (readBytes == ERR_RETURN) {
 		cerr << "client write error!" << endl;
+		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getNickname() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);  
 	} else {
 		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(readBytes));
@@ -87,7 +89,10 @@ void Server::handleEvent(const struct kevent& event) {
 		if (event.ident == (const uintptr_t)_fd)
 			throw(runtime_error("server socket error"));
 		else {
+			User *targetUser = _allUser[event.ident];
+
 			cerr << "client socket error" << endl;
+			targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getNickname() << "QUIT" << ":" << "Client closed connection", event.ident);
 			disconnectClient(event.ident);
 		}
 	} else if (event.filter == EVFILT_READ) {

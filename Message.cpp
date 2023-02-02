@@ -73,7 +73,6 @@ const string Message::createReplyForm(void) const {
 }
 
 Message& Message::operator<<(const string param) {
-    _params.push_back(param);
+    if (!param.empty()) _params.push_back(param);
     return (*this);
 }
-

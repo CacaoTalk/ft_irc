@@ -68,8 +68,8 @@ bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
 			Channel *targetChannel = *it;
 			
             const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
-			user->addToReplyBuffer(Message() << user->getNickname() << "PART" << targetChannel->getName());
-			targetChannel->broadcast(Message() << user->getNickname() << "PART" << targetChannel->getName());
+			user->addToReplyBuffer(Message() << ":" << user->getNickname() << "PART" << targetChannel->getName());
+			targetChannel->broadcast(Message() << ":" << user->getNickname() << "PART" << targetChannel->getName());
             if (remainUserOfChannel == 0) removeWaitingChannels.push_back(targetChannel->getName());
         }
 		user->clearMyChannelList();
@@ -139,8 +139,8 @@ bool Command::cmdPart(Server& server, User *user, const Message& msg) {
 		}
         const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
 		user->deleteFromMyChannelList(targetChannel);
-		user->addToReplyBuffer(Message() << user->getNickname() << "PART" << targetChannelName);
-		targetChannel->broadcast(Message() << user->getNickname() << "PART" << targetChannelName);
+		user->addToReplyBuffer(Message() << ":" << user->getNickname() << "PART" << targetChannelName << partNotiMessage);
+		targetChannel->broadcast(Message() << ":" << user->getNickname() << "PART" << targetChannelName << partNotiMessage);
         if (remainUserOfChannel == 0) server.deleteChannel(targetChannelName);
     }
 	return true;
@@ -253,13 +253,7 @@ bool Command::cmdQuit(Server& server, User *user, const Message& msg) {
 	else reason += "leaving";
 		
 	int clientFd = user->getFd();
-	const map<string, Channel *>& chs = server.getAllChannel();
-	map<string, Channel *>::const_iterator it;
-	for (it = chs.begin(); it != chs.end(); ++it) {
-		if (it->second->findUser(clientFd) != NULL) {
-			it->second->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << reason, clientFd);
-		}
-	}
+	user->broadcastToMyChannels(Message() << ":" << user->getNickname() << msg.getCommand() << reason, clientFd);
 	server.disconnectClient(clientFd);
 	return false;
 }
