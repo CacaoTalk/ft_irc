@@ -189,7 +189,8 @@ bool Command::cmdNick(Server& server, User *user, const Message& msg) {
 			return false;
 		}
 	}
-	user->broadcastToMyChannels(Message() << ":" << originNickname << msg.getCommand() << requestNickname);
+	if (user->getMyAllChannel().empty()) user->addToReplyBuffer(Message() << ":" << originNickname << msg.getCommand() << requestNickname);
+	else user->broadcastToMyChannels(Message() << ":" << originNickname << msg.getCommand() << requestNickname);
 	return true;
 }
 
