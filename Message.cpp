@@ -56,7 +56,7 @@ vector<string> Message::split(const string& str, const char delimeter) {
     return splited;
 }
 
-int Message::paramSize(void) const {
+size_t Message::paramSize(void) const {
     return _params.size();
 }
 

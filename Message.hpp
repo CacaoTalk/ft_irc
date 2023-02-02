@@ -29,7 +29,7 @@ class Message {
 
         static vector<string> split(const string& str, const char delimeter);
         
-        int paramSize(void) const;
+        size_t paramSize(void) const;
         const string createReplyForm(void) const;
         Message& operator<<(const string param);
 };
