@@ -45,8 +45,7 @@ int Channel::deleteUser(int clientFd) {
 
        nextOper = *_userList.begin();
        _operList.insert(nextOper.first);
-       // is IRC message Format?
-    //    broadcast(nextOper.second->getNickname().append(NEW_OPERATOR_MESSAGE));
+       broadcast(Message() << ":" << clientName << "MODE" << getName() << "+o" << nextOper.second->getNickname());
     }
     return _userList.size();
 }
@@ -65,18 +64,8 @@ bool Channel::isUserOper(int clientFd) const {
     return (_operList.find(clientFd) != _operList.end());
 }
 
-void Channel::broadcast(const string& msg, int ignoreFd) const {
-    map<int, User *>::const_iterator it;
-
-    for(it = _userList.begin(); it != _userList.end(); ++it) {
-        if (it->first == ignoreFd) continue;
-
-        it->second->addToReplyBuffer(msg);
-    }
-}
-
-void Channel::broadcast(const Message& msg, int ignoreFd) const {
-    map<int, User *>::const_iterator it;
+void Channel::broadcast(const Message& msg, int ignoreFd) {
+    map<int, User *>::iterator it;
 
     for(it = _userList.begin(); it != _userList.end(); ++it) {
         if (it->first == ignoreFd) continue;
