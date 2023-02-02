@@ -7,6 +7,8 @@
 # include <vector>
 using namespace std;
 
+# define UNDEFINED_FD -1
+
 class Channel;
 class Message;
 class User {
@@ -52,7 +54,7 @@ class User {
 		void addToMyChannelList(Channel* channel);
 		void deleteFromMyChannelList(Channel* channel);
 		void clearMyChannelList(void);
-		void broadcastToMyChannels(const Message& msg, const int ignoreFd) const;
+		void broadcastToMyChannels(const Message& msg, const int ignoreFd = UNDEFINED_FD) const;
 };
 
 #endif
