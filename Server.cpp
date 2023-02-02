@@ -114,7 +114,7 @@ void Server::handleMessageFromBuffer(User* user) {
 		}
 		Message msg(user->getCmdBuffer().substr(0, crlfPos));
 		user->setCmdBuffer(user->getCmdBuffer().substr(crlfPos + 1));
-		Command::runCommand(*this, user, msg);
+		if (!Command::runCommand(*this, user, msg)) break;
 	}
 }
 
