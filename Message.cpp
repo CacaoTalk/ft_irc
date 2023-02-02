@@ -1,16 +1,9 @@
 #include "Server.hpp"
-// for debug
-#include <iostream>
 
 Message::Message(void) {}
 
-Message::Message(const string& msg) {
-    parse(msg);
-    // for debug: print command and params
-    cout << "COMMAND: " << _command << endl;
-    for (vector<string>::iterator it = _params.begin(); it != _params.end(); ++it) {
-        cout <<"PARAMS: " << *it << endl;
-    }
+Message::Message(const string& ircMsgFormStr) {
+    parse(ircMsgFormStr);
 }
 
 Message::~Message() {
@@ -18,37 +11,8 @@ Message::~Message() {
     _params.clear();
 }
 
-const string Message::createReplyForm(void) {
-    string reply;
-
-    vector<string>::iterator it;
-    for (it = _params.begin(); it != _params.end(); ++it) {
-        if (it != _params.begin() && reply != ":") reply += " ";
-        reply += (*it);
-    }
-    reply += "\r\n";
-    return reply;
-}
-
-
-vector<string> Message::split(const string& str, const char delimeter) {
-    vector<string> splited;
-    size_t cursorPos = 0;
-    size_t delimeterPos;
-
-    while ((delimeterPos = str.find(delimeter, cursorPos)) != string::npos) {
-        splited.push_back(str.substr(cursorPos, delimeterPos - cursorPos));
-        while (str.at(delimeterPos) == delimeter) {
-            if (++delimeterPos == str.length()) return splited;
-        }
-        cursorPos = delimeterPos;
-    }
-    splited.push_back(str.substr(cursorPos, string::npos));
-    return splited;
-}
-
-void Message::parse(const string& msg) {
-    vector<string> splitedBySpace = split(msg, ' ');
+void Message::parse(const string& ircMsgFormStr) {
+    vector<string> splitedBySpace = split(ircMsgFormStr, ' ');
 
     for (vector<string>::size_type i = 0; i < splitedBySpace.size(); ++i) {
         if (i == 0) {
@@ -68,16 +32,48 @@ void Message::parse(const string& msg) {
         } else _params.push_back(splitedBySpace[i]);
     }
 }
-
-string Message::getCommand() const {
+const string& Message::getCommand(void) const {
     return _command;
 }
 
-vector<string> Message::getParams() const {
+const vector<string>& Message::getParams(void) const {
     return _params;
+}
+
+vector<string> Message::split(const string& str, const char delimeter) {
+    vector<string> splited;
+    size_t cursorPos = 0;
+    size_t delimeterPos;
+
+    while ((delimeterPos = str.find(delimeter, cursorPos)) != string::npos) {
+        splited.push_back(str.substr(cursorPos, delimeterPos - cursorPos));
+        while (str.at(delimeterPos) == delimeter) {
+            if (++delimeterPos == str.length()) return splited;
+        }
+        cursorPos = delimeterPos;
+    }
+    splited.push_back(str.substr(cursorPos));
+    return splited;
+}
+
+size_t Message::paramSize(void) const {
+    return _params.size();
+}
+
+const string Message::createReplyForm(void) const {
+    string reply;
+
+    vector<string>::const_iterator it;
+    for (it = _params.begin(); it != _params.end(); ++it) {
+        reply += (*it);
+        if (*it != ":" && (it + 1) != _params.end()) reply += ' ';
+    }
+    reply += "\r\n";
+    return reply;
 }
 
 Message& Message::operator<<(const string param) {
     _params.push_back(param);
     return (*this);
 }
+
