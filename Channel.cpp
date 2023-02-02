@@ -75,12 +75,33 @@ bool Channel::isUserOper(int clientFd) const {
     return (_operList.find(clientFd) != _operList.end());
 }
 
-void Channel::broadcast(const Message& msg, int ignoreFd) {
-    map<int, User *>::iterator it;
+void Channel::broadcast(const Message& msg, int ignoreFd) const {
+    map<int, User *>::const_iterator it;
 
     for(it = _userList.begin(); it != _userList.end(); ++it) {
         if (it->first == ignoreFd) continue;
 
         it->second->addToReplyBuffer(msg.createReplyForm());
     }
+}
+
+void Channel::executeBot(const string& msgContent) {
+	vector<string> params = Message::split(msgContent, ' ');
+	string command = params[0];
+	
+	for (string::size_type i=0; i<command.length(); i++) command[i] = toupper(command[i]);
+	if (command == "!HELP") {
+		broadcast(Message() << ":" << SERVER_HOSTNAME << "PRIVMSG" << getName() << ":" 
+                            << "Bot commands: .addmenu .deletemenu .showmenu .pickmenu");
+	} else if (command == "!ADDMENU") {
+		_bot.addMenu(params);
+	} else if (command == "!DELETEMENU") {
+		_bot.deleteMenu(params);
+	} else if (command == "!SHOWMENU") {
+		broadcast(Message() << ":" << SERVER_HOSTNAME << "PRIVMSG" << getName() << ":" 
+                            << _bot.showMenu());
+	} else if (command == "!PICKMENU") {
+		broadcast(Message() << ":" << SERVER_HOSTNAME << "PRIVMSG" << getName() << ":" 
+                            << _bot.pickMenu());
+	}
 }

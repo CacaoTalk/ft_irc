@@ -7,9 +7,13 @@
 # include <set>
 # include <vector>
 # include "User.hpp"
+# include "Bot.hpp"
+
 # define UNDEFINED_FD -1
 # define DEFAULT_PART_MESSAGE " leaved channel."
 # define NEW_OPERATOR_MESSAGE " is new channel operator."
+# define SERVER_HOSTNAME "cacaotalk.42seoul.kr"
+
 
 using namespace std;
 
@@ -20,6 +24,7 @@ class Channel {
 		string _name;
 		map<int, User *> _userList;
 		set<int> _operList;
+        Bot _bot;
 
         Channel(void);
         Channel(const Channel& channel);
@@ -37,7 +42,9 @@ class Channel {
         User* findUser(const int clientFd);
         User* findUser(const string& nickname);
         bool isUserOper(int clientFd) const;
-        void broadcast(const Message& msg, int ignoreFd = UNDEFINED_FD);
+        void broadcast(const Message& msg, int ignoreFd = UNDEFINED_FD) const;
+
+        void executeBot(const string& msgContent);
 };
 
 #endif
