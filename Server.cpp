@@ -53,8 +53,11 @@ void Server::acceptNewClient(void) {
 
 void Server::readDataFromClient(const struct kevent& event) {
 	char buf[513];
-	User* targetUser = _allUser[event.ident];
+	map<int, User *>::iterator it = _allUser.find(event.ident);
+	User* targetUser = it->second;
 	int readBytes;
+
+	if (it == _allUser.end()) return ;
 
 	readBytes = read(event.ident, buf, 512);
 	if (readBytes <= 0) {
@@ -69,9 +72,11 @@ void Server::readDataFromClient(const struct kevent& event) {
 }
 
 void Server::sendDataToClient(const struct kevent& event) {
-	User *targetUser = _allUser[event.ident];
+	map<int, User *>::iterator it = _allUser.find(event.ident);
+	User* targetUser = it->second;
 	int readBytes;
 
+	if (it == _allUser.end()) return ;
 	if (targetUser->getReplyBuffer().empty()) return;
 
 	readBytes = write(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length());
@@ -166,18 +171,23 @@ Channel* Server::addChannel(const string& name) {
 }
 
 void Server::deleteChannel(const string& name) {
-	Channel *ch = _allChannel[name];
+	map<string, Channel *>::iterator it = _allChannel.find(name);
+	Channel *ch = it->second;
 
+	if (it == _allChannel.end()) return ;
+	
 	_allChannel.erase(name);
 	delete ch;
 	cout << "channel deleted: " << name << '\n';
 }
 
 void Server::disconnectClient(int clientFd) {
-	User *user = _allUser[clientFd];
+	map<int, User *>::iterator it = _allUser.find(clientFd);
+	User* targetUser = it->second;
 
+	if (it == _allUser.end()) return ;
     _allUser.erase(clientFd);
-	delete user;
+	delete targetUser;
 	cout << "client disconnected: " << clientFd << '\n';
 }
 
