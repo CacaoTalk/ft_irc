@@ -4,7 +4,9 @@
 #include "User.hpp"
 #include "Message.hpp"
 
+#include "CommonValue.hpp"
 #include "Reply.hpp"
+#include "FormatValidator.hpp"
 
 #include <iostream>
 
@@ -165,7 +167,7 @@ bool Command::cmdNick(Server& server, User *user, const Message& msg) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
 		return true;
 	}
-	const string requestNickname = msg.getParams()[0];
+	string requestNickname = msg.getParams()[0];
 	const string originNickname = user->getNickname();
 
 	if (requestNickname.length() == 0) {
@@ -178,6 +180,11 @@ bool Command::cmdNick(Server& server, User *user, const Message& msg) {
 		return true;
 	}
 	
+	if (requestNickname.length() > MAX_NICKNAME_LEN) requestNickname = requestNickname.erase(MAX_NICKNAME_LEN);
+	if (!FormatValidator::isValidNickname(requestNickname)) {
+		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_ERRONEUSNICKNAME << requestNickname << ERR_ERRONEUSNICKNAME_MSG);
+		return true;
+	}
 	user->setNickname(requestNickname);
 	if (!user->getAuth() && !user->getUsername().empty()) {
 		if (server.checkPassword(user->getPassword())) {
