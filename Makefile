@@ -12,7 +12,7 @@ endif
 NAME	= ircserv
 
 ################ FILE ################
-SRCS	= main.cpp Server.cpp Channel.cpp User.cpp Message.cpp Command.cpp Bot.cpp
+SRCS	= main.cpp Server.cpp Channel.cpp User.cpp Message.cpp Command.cpp FormatValidator.cpp Bot.cpp
 
 ################ OBJ #################
 OBJS	= $(SRCS:%.cpp=%.o)
