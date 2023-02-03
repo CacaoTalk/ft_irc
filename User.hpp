@@ -14,6 +14,7 @@ class Message;
 class User {
 	private:
 		int _fd;
+		string _host;
 		string _password;
 		string _nickname; // unique
 		string _username;
@@ -27,12 +28,13 @@ class User {
 		User& operator=(const User& user);
 
 	public:
-        User(int fd);
+        User(int fd, const string& host);
 		~User();
 		
 		int getFd(void) const;
 		const string& getPassword(void) const;
 		const string getNickname(void) const;
+		const string getSource(void) const;
 		const string& getUsername(void) const;
 		bool getAuth(void) const;
 		const string& getCmdBuffer(void) const;

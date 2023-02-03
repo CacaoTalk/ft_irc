@@ -41,7 +41,7 @@ bool Command::cmdPrivmsg(Server& server, User *user, const Message& msg) {
 				user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG);
 				continue;
 			}
-            targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << targetChannel->getName() << ":" << msg.getParams()[1], user->getFd());
+            targetChannel->broadcast(Message() << ":" << user->getSource() << msg.getCommand() << targetChannel->getName() << ":" << msg.getParams()[1], user->getFd());
 			if (msg.getParams()[1][0] == '!') targetChannel->executeBot(msg.getParams()[1]);
         } else {
             User *targetUser;
@@ -51,7 +51,7 @@ bool Command::cmdPrivmsg(Server& server, User *user, const Message& msg) {
 				user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHNICK << user->getNickname() << targetName << ERR_NOSUCHNICK_MSG);
 				continue;
 			}
-            targetUser->addToReplyBuffer(Message() << ":" << user->getNickname() << msg.getCommand() << targetUser->getNickname() << ":" << msg.getParams()[1]);
+            targetUser->addToReplyBuffer(Message() << ":" << user->getSource() << msg.getCommand() << targetUser->getNickname() << ":" << msg.getParams()[1]);
         }
     }
 	return true;
@@ -71,8 +71,8 @@ bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
 			Channel *targetChannel = *it;
 			
             const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
-			user->addToReplyBuffer(Message() << ":" << user->getNickname() << "PART" << targetChannel->getName());
-			targetChannel->broadcast(Message() << ":" << user->getNickname() << "PART" << targetChannel->getName());
+			user->addToReplyBuffer(Message() << ":" << user->getSource() << "PART" << targetChannel->getName());
+			targetChannel->broadcast(Message() << ":" << user->getSource() << "PART" << targetChannel->getName());
             if (remainUserOfChannel == 0) removeWaitingChannels.push_back(targetChannel->getName());
         }
 		user->clearMyChannelList();
@@ -99,7 +99,7 @@ bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
         targetChannel->addUser(user->getFd(), user);
 		user->addToMyChannelList(targetChannel);
 		Message replyMsg[3];
-		replyMsg[0] << ":" << user->getNickname() << msg.getCommand() << ":" << targetChannelName;
+		replyMsg[0] << ":" << user->getSource() << msg.getCommand() << ":" << targetChannelName;
 		replyMsg[1] << ":" << SERVER_HOSTNAME << RPL_NAMREPLY << user->getNickname() << "=" << targetChannelName << ":";
 		vector<string> targetChannelUserList = targetChannel->getUserList();
 		for (vector<string>::iterator it = targetChannelUserList.begin(); it != targetChannelUserList.end(); ++it) {
@@ -142,8 +142,8 @@ bool Command::cmdPart(Server& server, User *user, const Message& msg) {
 		}
         const int remainUserOfChannel = targetChannel->deleteUser(user->getFd());
 		user->deleteFromMyChannelList(targetChannel);
-		user->addToReplyBuffer(Message() << ":" << user->getNickname() << "PART" << targetChannelName << partNotiMessage);
-		targetChannel->broadcast(Message() << ":" << user->getNickname() << "PART" << targetChannelName << partNotiMessage);
+		user->addToReplyBuffer(Message() << ":" << user->getSource() << "PART" << targetChannelName << partNotiMessage);
+		targetChannel->broadcast(Message() << ":" << user->getSource() << "PART" << targetChannelName << partNotiMessage);
         if (remainUserOfChannel == 0) server.deleteChannel(targetChannelName);
     }
 	return true;
@@ -262,7 +262,7 @@ bool Command::cmdQuit(Server& server, User *user, const Message& msg) {
 	else reason += "leaving";
 		
 	int clientFd = user->getFd();
-	user->broadcastToMyChannels(Message() << ":" << user->getNickname() << msg.getCommand() << reason, clientFd);
+	user->broadcastToMyChannels(Message() << ":" << user->getSource() << msg.getCommand() << reason, clientFd);
 	server.disconnectClient(clientFd);
 	return false;
 }
@@ -308,7 +308,7 @@ bool Command::cmdKick(Server& server, User *user, const Message& msg) {
 		}
 
 		// 존재하면 Kick (그 channel에 deleteUser)
-		targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << msg.getParams()[0] << *it << reason);
+		targetChannel->broadcast(Message() << ":" << user->getSource() << msg.getCommand() << msg.getParams()[0] << *it << reason);
 		const int remainUsers = targetChannel->deleteUser(targetUser->getFd());
 		if (remainUsers == 0) server.deleteChannel(targetChannel->getName());
 	}
@@ -333,13 +333,13 @@ bool Command::cmdNotice(Server& server, User *user, const Message& msg) {
 
             targetChannel = server.findChannelByName(targetName);
             if (targetChannel == NULL) continue;
-            targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << targetName << ":" << msg.getParams()[1]);
+            targetChannel->broadcast(Message() << ":" << user->getSource() << msg.getCommand() << targetName << ":" << msg.getParams()[1]);
         } else {
             User *targetUser;
 
             targetUser = server.findClientByNickname(targetName);
             if (targetUser == NULL) continue;
-            targetUser->addToReplyBuffer(Message() << ":" << user->getNickname() << msg.getCommand() << targetName << ":" << msg.getParams()[1]);
+            targetUser->addToReplyBuffer(Message() << ":" << user->getSource() << msg.getCommand() << targetName << ":" << msg.getParams()[1]);
         }
     }
 	return true;
