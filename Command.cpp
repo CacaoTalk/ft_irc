@@ -270,6 +270,12 @@ bool Command::cmdQuit(Server& server, User *user, const Message& msg) {
 bool Command::cmdKick(Server& server, User *user, const Message& msg) {
 	if (msg.paramSize() < 2)
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
+
+	string reason;
+	if (msg.paramSize() >= 3) {
+		reason.append(":");
+		reason.append(msg.getParams()[2]);
+	}
 	
 	// 해당 channel이 존재하는 지 check
 	Channel *targetChannel = server.findChannelByName(msg.getParams()[0]);
@@ -292,24 +298,15 @@ bool Command::cmdKick(Server& server, User *user, const Message& msg) {
 
 	// iteration
 	const vector<string> targetUsers = Message::split(msg.getParams()[1], ',');
-	string reason;
-	if (msg.paramSize() >= 3) {
-		reason.append(":");
-		reason.append(msg.getParams()[2]);
-	}
-
 	for (vector<string>::const_iterator it = targetUsers.begin(); it != targetUsers.end(); ++it) {
 		// target User가 channel에 존재하는지
-		User *targetUser = targetChannel->findUser(*it);
-
-		if (targetUser == NULL) {
+		int targetFd = server.findClientByNickname(*it)->getFd();
+		if (targetChannel->findUser(targetFd) == NULL)
 			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_USERNOTINCHANNEL << user->getNickname() << *it << msg.getParams()[0] << ERR_USERNOTINCHANNEL_MSG);
-			continue;
-		}
 
 		// 존재하면 Kick (그 channel에 deleteUser)
-		targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << msg.getParams()[0] << *it << reason);
-		const int remainUsers = targetChannel->deleteUser(targetUser->getFd());
+		targetChannel->broadcast(Message() << ":" << user->getNickname() << msg.getCommand() << msg.getParams()[0] << *it << ":" << user->getNickname());
+		const int remainUsers = targetChannel->deleteUser(targetFd);
 		if (remainUsers == 0) server.deleteChannel(targetChannel->getName());
 	}
 	return true;
