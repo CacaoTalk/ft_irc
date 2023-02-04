@@ -37,17 +37,23 @@ void Server::updateEvents(int socket, int16_t filter, uint16_t flags, uint32_t f
 
 void Server::acceptNewClient(void) {
 	int clientSocket;
+	struct sockaddr_in clientAddr;
+	socklen_t addrLen = sizeof(clientAddr);
+	char hostStr[INET_ADDRSTRLEN];
 	User *user;
 
-	if ((clientSocket = accept(_fd, NULL, NULL)) == ERR_RETURN)
+	memset(&clientAddr, 0, sizeof(clientAddr));
+	memset(hostStr, 0, sizeof(hostStr));
+	if ((clientSocket = accept(_fd, (struct sockaddr *)&clientAddr, &addrLen)) == ERR_RETURN)
 		throw(runtime_error("accept() error"));
-	cout << "accept new client: " << clientSocket << endl;
+	inet_ntop(AF_INET, &clientAddr.sin_addr, hostStr, INET_ADDRSTRLEN);
+	cout << "accept new client: " << clientSocket << " / Host : " << hostStr << endl;
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
 
-	/* add event for client socket - add read && write event */
 	updateEvents(clientSocket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	updateEvents(clientSocket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	user = new User(clientSocket);
+
+	user = new User(clientSocket, hostStr);
 	_allUser.insert(make_pair(clientSocket, user));
 }
 
@@ -62,7 +68,7 @@ void Server::readDataFromClient(const struct kevent& event) {
 	readBytes = read(event.ident, buf, 512);
 	if (readBytes <= 0) {
 		cerr << "client read error!" << endl;
-		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getNickname() << "QUIT" << ":" << "Client closed connection", event.ident);
+		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);
 	} else {
 		buf[readBytes] = '\0';
@@ -82,7 +88,7 @@ void Server::sendDataToClient(const struct kevent& event) {
 	readBytes = write(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length());
 	if (readBytes == ERR_RETURN) {
 		cerr << "client write error!" << endl;
-		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getNickname() << "QUIT" << ":" << "Client closed connection", event.ident);
+		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);  
 	} else {
 		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(readBytes));
@@ -97,7 +103,7 @@ void Server::handleEvent(const struct kevent& event) {
 			User *targetUser = _allUser[event.ident];
 
 			cerr << "client socket error" << endl;
-			targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getNickname() << "QUIT" << ":" << "Client closed connection", event.ident);
+			targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 			disconnectClient(event.ident);
 		}
 	} else if (event.filter == EVFILT_READ) {

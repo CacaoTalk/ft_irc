@@ -29,12 +29,12 @@ void Channel::addUser(int clientFd, User *user) {
 
 int Channel::deleteUser(int clientFd) {
     map<int, User *>::iterator it;
-    string clientName;
+    string clientSource;
 
     it = _userList.find(clientFd);
     if (it == _userList.end()) return _userList.size();
     
-    clientName = it->second->getNickname();
+    clientSource = it->second->getSource();
     _userList.erase(clientFd);
     _operList.erase(clientFd);
 
@@ -45,7 +45,7 @@ int Channel::deleteUser(int clientFd) {
 
        nextOper = *_userList.begin();
        _operList.insert(nextOper.first);
-       broadcast(Message() << ":" << clientName << "MODE" << getName() << "+o" << nextOper.second->getNickname());
+       broadcast(Message() << ":" << clientSource << "MODE" << getName() << "+o" << nextOper.second->getNickname());
     }
     return _userList.size();
 }

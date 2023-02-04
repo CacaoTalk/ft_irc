@@ -3,7 +3,7 @@
 #include "Channel.hpp"
 #include "Message.hpp"
 
-User::User(int fd) : _fd(fd), _auth(false) { }
+User::User(int fd, const string& host) : _fd(fd), _host(host), _auth(false) { }
 
 User::~User() {
     close(_fd);
@@ -25,6 +25,14 @@ const string User::getNickname(void) const {
     if (_nickname.empty()) return "*";
     
     return _nickname;
+}
+
+const string User::getSource(void) const {
+    string source = getNickname();
+    if (source.empty()) source = "*";
+    source = source + "@" + _host;
+
+    return source;
 }
 
 const string& User::getUsername(void) const {
