@@ -92,6 +92,7 @@ void Server::sendDataToClient(const struct kevent& event) {
 		disconnectClient(event.ident);  
 	} else {
 		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(readBytes));
+		if (targetUser->getIsQuiting() && targetUser->getReplyBuffer().empty()) disconnectClient(event.ident);
 	}
 }
 

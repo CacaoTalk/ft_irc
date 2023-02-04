@@ -18,7 +18,7 @@ struct Command
 	static bool cmdNick(Server& server, User *user, const Message& msg);
 	static bool cmdUser(Server& server, User *user, const Message& msg);
 	static bool cmdPing(User *user, const Message& msg);
-	static bool cmdQuit(Server& server, User *user, const Message& msg);
+	static bool cmdQuit(User *user, const Message& msg);
 	static bool cmdKick(Server& server, User *user, const Message& msg);
 	static bool cmdNotice(Server& server, User *user, const Message& msg);
 };

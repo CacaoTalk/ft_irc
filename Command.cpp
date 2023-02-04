@@ -19,7 +19,7 @@ bool Command::runCommand(Server& server, User *user, const Message& msg) {
 	else if (cmd == "NICK") return cmdNick(server, user, msg);
 	else if (cmd == "USER") return cmdUser(server, user, msg);
 	else if (cmd == "PING") return cmdPing(user, msg);
-	else if (cmd == "QUIT") return cmdQuit(server, user, msg); 
+	else if (cmd == "QUIT") return cmdQuit(user, msg); 
 	else if (cmd == "KICK") return cmdKick(server, user, msg);
 	else if (cmd == "NOTICE") return cmdNotice(server, user, msg);
 	return true;
@@ -256,19 +256,18 @@ bool Command::cmdPing(User *user, const Message& msg) {
 	return true;
 }
 
-bool Command::cmdQuit(Server& server, User *user, const Message& msg) {
-	if (msg.paramSize() < 1) {
-		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
-		return true;
-	}
-
+bool Command::cmdQuit(User *user, const Message& msg) {
 	string reason = ":Quit:";
 	if (msg.paramSize() == 1) reason += msg.getParams()[0];
 	else reason += "leaving";
-		
+
+	user->clearCmdBuffer();
+	user->clearReplyBuffer();
+	user->setIsQuiting();
+
 	int clientFd = user->getFd();
+	user->setReplyBuffer("\r\nERROR :Closing Link: " + user->getHost() + " " + reason + "\r\n");
 	user->broadcastToMyChannels(Message() << ":" << user->getSource() << msg.getCommand() << reason, clientFd);
-	server.disconnectClient(clientFd);
 	return false;
 }
 
