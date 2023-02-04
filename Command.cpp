@@ -88,6 +88,11 @@ bool Command::cmdJoin(Server& server, User *user, const Message& msg) {
 			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NOSUCHCHANNEL << user->getNickname() << targetChannelName << ERR_NOSUCHCHANNEL_MSG);
 			continue;
 		}
+		if (targetChannelName.length() > 31) targetChannelName.erase(MAX_CHANNELNAME_LEN);
+		if (!FormatValidator::isValidChannelname(targetChannelName)) {
+			user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_ERRONEUSCHANNELNAME << user->getNickname() << targetChannelName << ERR_ERRONEUSCHANNELNAME_MSG);
+			continue;
+		}
 
         Channel *targetChannel;
 

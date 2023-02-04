@@ -14,6 +14,7 @@ struct FormatValidator {
     static bool isSpecial(const char dst);
 
     static bool isValidNickname(const string& nickname);
+    static bool isValidChannelname(const string& channelname);
 };
 
 #endif

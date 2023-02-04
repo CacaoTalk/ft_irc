@@ -29,3 +29,14 @@ bool FormatValidator::isValidNickname(const string& nickname) {
     }
     return true;
 }
+
+bool FormatValidator::isValidChannelname(const string& channelname) {
+    string::const_iterator it = channelname.begin();
+
+    for (; it != channelname.end(); ++it) {
+        if (!isTargetChar(*it, 7)) continue;
+
+        return false;
+    }
+    return true;
+}

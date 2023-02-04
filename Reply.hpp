@@ -44,6 +44,8 @@
 # define ERR_PASSWDMISMATCH_MSG ":Password incorrect"
 
 # define ERR_CHANNELISFULL "471"
+# define ERR_ERRONEUSCHANNELNAME "479"
+# define ERR_ERRONEUSCHANNELNAME_MSG ":Channel name contains illegal characters"
 # define ERR_CHANOPRIVSNEEDED "482"
 # define ERR_CHANOPRIVSNEEDED_MSG ":You're not channel operator"
 
