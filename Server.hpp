@@ -39,6 +39,7 @@ class Server {
         map<string, Channel *> _allChannel;
         vector<struct kevent> _eventCheckList;
         struct kevent _waitingEvents[8];
+        Command _command;
 
         Server(void);
         Server(const Server& server);
