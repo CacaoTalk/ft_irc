@@ -46,6 +46,7 @@ void Server::acceptNewClient(void) {
 	memset(hostStr, 0, sizeof(hostStr));
 	if ((clientSocket = accept(_fd, (struct sockaddr *)&clientAddr, &addrLen)) == ERR_RETURN)
 		throw(runtime_error("accept() error"));
+	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
 	inet_ntop(AF_INET, &clientAddr.sin_addr, hostStr, INET_ADDRSTRLEN);
 	cout << "accept new client: " << clientSocket << " / Host : " << hostStr << endl;
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
@@ -57,21 +58,25 @@ void Server::acceptNewClient(void) {
 	_allUser.insert(make_pair(clientSocket, user));
 }
 
-void Server::readDataFromClient(const struct kevent& event) {
+void Server::recvDataFromClient(const struct kevent& event) {
 	char buf[513];
 	map<int, User *>::iterator it = _allUser.find(event.ident);
 	User* targetUser = it->second;
-	int readBytes;
+	int recvBytes;
 
 	if (it == _allUser.end()) return ;
 
-	readBytes = read(event.ident, buf, 512);
-	if (readBytes <= 0) {
-		cerr << "client read error!" << endl;
+	recvBytes = recv(event.ident, buf, 512, 0);
+	if (recvBytes <= 0) {
+		if (recvBytes == ERR_RETURN && errno == EAGAIN) {
+			errno = 0;
+			return;
+		}
+		cerr << "client recv error!" << endl;
 		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);
 	} else {
-		buf[readBytes] = '\0';
+		buf[recvBytes] = '\0';
 		targetUser->addToCmdBuffer(buf);
 		handleMessageFromBuffer(targetUser);
 	}
@@ -80,18 +85,23 @@ void Server::readDataFromClient(const struct kevent& event) {
 void Server::sendDataToClient(const struct kevent& event) {
 	map<int, User *>::iterator it = _allUser.find(event.ident);
 	User* targetUser = it->second;
-	int readBytes;
+	int sendBytes;
 
 	if (it == _allUser.end()) return ;
 	if (targetUser->getReplyBuffer().empty()) return;
 
-	readBytes = write(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length());
-	if (readBytes == ERR_RETURN) {
-		cerr << "client write error!" << endl;
+	sendBytes = send(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length(), 0);
+	if (sendBytes == ERR_RETURN) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			errno = 0;
+			return ;
+		}
+		cerr << "client send error!" << endl;
 		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);  
 	} else {
-		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(readBytes));
+
+		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(sendBytes));
 		if (targetUser->getIsQuiting() && targetUser->getReplyBuffer().empty()) disconnectClient(event.ident);
 	}
 }
@@ -111,7 +121,7 @@ void Server::handleEvent(const struct kevent& event) {
 		if (event.ident == (const uintptr_t)_fd)
 			acceptNewClient();
 		else
-			readDataFromClient(event);
+			recvDataFromClient(event);
 	} else if (event.filter == EVFILT_WRITE)
 		sendDataToClient(event);
 }
