@@ -193,7 +193,13 @@ void Server::disconnectClient(int clientFd) {
 	User* targetUser = it->second;
 
 	if (it == _allUser.end()) return ;
+
     _allUser.erase(clientFd);
+	const vector<Channel *> userChannelList = targetUser->getMyAllChannel();
+	for (vector<Channel *>::const_iterator it = userChannelList.begin(); it != userChannelList.end(); ++it) {
+		const int remainUsers = (*it)->deleteUser(targetUser->getFd());
+		if (remainUsers == 0) deleteChannel((*it)->getName());
+	}
 	delete targetUser;
 	cout << "client disconnected: " << clientFd << '\n';
 }

@@ -7,9 +7,6 @@ User::User(int fd, const string& host) : _fd(fd), _host(host), _auth(false), _is
 
 User::~User() {
     close(_fd);
-    for (vector<Channel *>::iterator it = _myChannelList.begin(); it != _myChannelList.end(); ++it) {
-        (*it)->deleteUser(_fd);
-    }
     _myChannelList.clear();
 }
 
