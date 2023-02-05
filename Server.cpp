@@ -58,25 +58,25 @@ void Server::acceptNewClient(void) {
 	_allUser.insert(make_pair(clientSocket, user));
 }
 
-void Server::readDataFromClient(const struct kevent& event) {
+void Server::recvDataFromClient(const struct kevent& event) {
 	char buf[513];
 	map<int, User *>::iterator it = _allUser.find(event.ident);
 	User* targetUser = it->second;
-	int readBytes;
+	int recvBytes;
 
 	if (it == _allUser.end()) return ;
 
-	readBytes = read(event.ident, buf, 512);
-	if (readBytes <= 0) {
-		if (readBytes == ERR_RETURN && errno == EAGAIN) {
+	recvBytes = recv(event.ident, buf, 512, 0);
+	if (recvBytes <= 0) {
+		if (recvBytes == ERR_RETURN && errno == EAGAIN) {
 			errno = 0;
 			return;
 		}
-		cerr << "client read error!" << endl;
+		cerr << "client recv error!" << endl;
 		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);
 	} else {
-		buf[readBytes] = '\0';
+		buf[recvBytes] = '\0';
 		targetUser->addToCmdBuffer(buf);
 		handleMessageFromBuffer(targetUser);
 	}
@@ -85,22 +85,22 @@ void Server::readDataFromClient(const struct kevent& event) {
 void Server::sendDataToClient(const struct kevent& event) {
 	map<int, User *>::iterator it = _allUser.find(event.ident);
 	User* targetUser = it->second;
-	int readBytes;
+	int sendBytes;
 
 	if (it == _allUser.end()) return ;
 	if (targetUser->getReplyBuffer().empty()) return;
 
-	readBytes = write(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length());
-	if (readBytes == ERR_RETURN) {
+	sendBytes = send(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length(), 0);
+	if (sendBytes == ERR_RETURN) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			errno = 0;
 			return ;
 		}
-		cerr << "client write error!" << endl;
+		cerr << "client send error!" << endl;
 		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);  
 	} else {
-		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(readBytes));
+		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(sendBytes));
 	}
 }
 
@@ -119,7 +119,7 @@ void Server::handleEvent(const struct kevent& event) {
 		if (event.ident == (const uintptr_t)_fd)
 			acceptNewClient();
 		else
-			readDataFromClient(event);
+			recvDataFromClient(event);
 	} else if (event.filter == EVFILT_WRITE)
 		sendDataToClient(event);
 }

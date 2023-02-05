@@ -50,7 +50,7 @@ class Server {
         void updateEvents(int socket, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 
         void acceptNewClient(void);
-        void readDataFromClient(const struct kevent& event);
+        void recvDataFromClient(const struct kevent& event);
         void sendDataToClient(const struct kevent& event);
         void handleEvent(const struct kevent& event);
 
