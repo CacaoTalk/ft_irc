@@ -26,7 +26,10 @@ Command::~Command() {
 }
 
 bool Command::run(User *user, const Message& msg) {
+	const string& prefix = msg.getPrefix();
 	const string& cmd = msg.getCommand();
+
+	if (!prefix.empty() && prefix != user->getNickname()) return true;
 
 	try {
 		return (this->*_commands.at(cmd))(user, msg);
@@ -268,18 +271,21 @@ bool Command::cmdPing(User *user, const Message& msg) {
 }
 
 bool Command::cmdQuit(User *user, const Message& msg) {
-	if (msg.paramSize() < 1) {
-		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
-		return true;
-	}
-
 	string reason = ":Quit:";
 	if (msg.paramSize() == 1) reason += msg.getParams()[0];
 	else reason += "leaving";
-		
+
+	user->clearCmdBuffer();
+	user->setReplyBuffer("\r\nERROR :Closing Link: " + user->getHost() + " " + reason + "\r\n");
+
 	int clientFd = user->getFd();
 	user->broadcastToMyChannels(Message() << ":" << user->getSource() << msg.getCommand() << reason, clientFd);
-	_server.disconnectClient(clientFd);
+	const vector<Channel *> userChannelList = user->getMyAllChannel();
+	for (vector<Channel *>::const_iterator it = userChannelList.begin(); it != userChannelList.end(); ++it) {
+		const int remainUsers = (*it)->deleteUser(user->getFd());
+		if (remainUsers == 0) _server.deleteChannel((*it)->getName());
+	}
+	user->setIsQuiting();
 	return false;
 }
 

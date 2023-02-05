@@ -3,18 +3,19 @@
 #include "Channel.hpp"
 #include "Message.hpp"
 
-User::User(int fd, const string& host) : _fd(fd), _host(host), _auth(false) { }
+User::User(int fd, const string& host) : _fd(fd), _host(host), _auth(false), _isQuiting(false) { }
 
 User::~User() {
     close(_fd);
-    for (vector<Channel *>::iterator it = _myChannelList.begin(); it != _myChannelList.end(); ++it) {
-        (*it)->deleteUser(_fd);
-    }
     _myChannelList.clear();
 }
 
 int User::getFd(void) const {
     return _fd;
+}
+
+const string& User::getHost(void) const {
+    return _host;
 }
 
 const string& User::getPassword(void) const {
@@ -55,6 +56,10 @@ const vector<Channel *>& User::getMyAllChannel(void) const {
     return _myChannelList;
 }
 
+bool User::getIsQuiting(void) const {
+    return _isQuiting;
+}
+
 void User::setPassword(const string& pwd) {
     _password = pwd;
 }
@@ -75,12 +80,20 @@ void User::setCmdBuffer(const string& str) {
     _cmdBuffer = str;
 }
 
+void User::clearCmdBuffer(void) {
+    _cmdBuffer.clear();
+}
+
 void User::setReplyBuffer(const string& str) {
     _replyBuffer = str;
 }
 
 void User::setReplyBuffer(const Message& msg) {
     _replyBuffer = msg.createReplyForm();
+}
+
+void User::clearReplyBuffer(void) {
+    _replyBuffer.clear();
 }
 
 void User::addToCmdBuffer(const string& str) {
@@ -117,4 +130,8 @@ void User::broadcastToMyChannels(const Message& msg, const int ignoreFd) const {
 	for (vector<Channel *>::const_iterator it = chs.begin(); it != chs.end(); ++it) {
 		(*it)->broadcast(msg, ignoreFd);
 	}
+}
+
+void User::setIsQuiting(void) {
+    _isQuiting = true;
 }

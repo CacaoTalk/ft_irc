@@ -100,7 +100,9 @@ void Server::sendDataToClient(const struct kevent& event) {
 		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);  
 	} else {
+
 		targetUser->setReplyBuffer(targetUser->getReplyBuffer().substr(sendBytes));
+		if (targetUser->getIsQuiting() && targetUser->getReplyBuffer().empty()) disconnectClient(event.ident);
 	}
 }
 
@@ -191,9 +193,9 @@ void Server::deleteChannel(const string& name) {
 
 	if (it == _allChannel.end()) return ;
 	
+	cout << "Delete channel from server: " << name << '\n';
 	_allChannel.erase(name);
 	delete ch;
-	cout << "channel deleted: " << name << '\n';
 }
 
 void Server::disconnectClient(int clientFd) {
@@ -201,7 +203,13 @@ void Server::disconnectClient(int clientFd) {
 	User* targetUser = it->second;
 
 	if (it == _allUser.end()) return ;
+
     _allUser.erase(clientFd);
+	const vector<Channel *> userChannelList = targetUser->getMyAllChannel();
+	for (vector<Channel *>::const_iterator it = userChannelList.begin(); it != userChannelList.end(); ++it) {
+		const int remainUsers = (*it)->deleteUser(targetUser->getFd());
+		if (remainUsers == 0) deleteChannel((*it)->getName());
+	}
 	delete targetUser;
 	cout << "client disconnected: " << clientFd << '\n';
 }
