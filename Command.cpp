@@ -26,7 +26,10 @@ Command::~Command() {
 }
 
 bool Command::run(User *user, const Message& msg) {
+	const string& prefix = msg.getPrefix();
 	const string& cmd = msg.getCommand();
+
+	if (!prefix.empty() && prefix != user->getNickname()) return true;
 
 	try {
 		return (this->*_commands.at(cmd))(user, msg);
