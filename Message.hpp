@@ -11,6 +11,7 @@ class Server;
 class User;
 class Message {
     private:
+        string _prefix;
         string _command;
         vector<string> _params;
         
@@ -24,6 +25,7 @@ class Message {
         Message(const string& ircMsgFormStr);
         ~Message();
 
+        const string& getPrefix(void) const;
         const string& getCommand(void) const;
         const vector<string>& getParams(void) const;
 

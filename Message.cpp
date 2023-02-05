@@ -15,9 +15,13 @@ void Message::parse(const string& ircMsgFormStr) {
     vector<string> splitedBySpace = split(ircMsgFormStr, ' ');
 
     for (vector<string>::size_type i = 0; i < splitedBySpace.size(); ++i) {
-        if (i == 0) {
-            _command = splitedBySpace[i];
+        if (i == 0 && splitedBySpace[i][0] == ':') {
+            _prefix = splitedBySpace[i].erase(0, 1);
             continue ;
+        }
+        if (_command.empty()) {
+            _command = splitedBySpace[i];
+            continue;
         }
         if (splitedBySpace[i][0] == ':') {
             string mergedString;
@@ -32,6 +36,11 @@ void Message::parse(const string& ircMsgFormStr) {
         } else _params.push_back(splitedBySpace[i]);
     }
 }
+
+const string& Message::getPrefix(void) const {
+    return _prefix;
+}
+
 const string& Message::getCommand(void) const {
     return _command;
 }
