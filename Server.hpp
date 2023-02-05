@@ -13,6 +13,7 @@
 # include <arpa/inet.h>
 # include <unistd.h>
 # include <fcntl.h>
+# include <sys/errno.h>
 # include <vector>
 
 # include "User.hpp"

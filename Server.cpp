@@ -68,6 +68,10 @@ void Server::readDataFromClient(const struct kevent& event) {
 
 	readBytes = read(event.ident, buf, 512);
 	if (readBytes <= 0) {
+		if (readBytes == ERR_RETURN && errno == EAGAIN) {
+			errno = 0;
+			return;
+		}
 		cerr << "client read error!" << endl;
 		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);
@@ -88,6 +92,10 @@ void Server::sendDataToClient(const struct kevent& event) {
 
 	readBytes = write(event.ident, targetUser->getReplyBuffer().c_str(), targetUser->getReplyBuffer().length());
 	if (readBytes == ERR_RETURN) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			errno = 0;
+			return ;
+		}
 		cerr << "client write error!" << endl;
 		targetUser->broadcastToMyChannels(Message() << ":" << targetUser->getSource() << "QUIT" << ":" << "Client closed connection", event.ident);
 		disconnectClient(event.ident);  
