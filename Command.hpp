@@ -13,11 +13,9 @@ class User;
 class Message;
 
 class Command {
-	typedef bool (Command::*ircCommand)(User *, const Message&);
-
 	private:
 		Server& _server;
-		map<string, ircCommand> _commands;
+		map<string, bool (Command::*)(User *, const Message&)> _commands;
 
 		Command(void);
 		Command(const Command& src);

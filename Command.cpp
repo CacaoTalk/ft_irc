@@ -30,7 +30,7 @@ bool Command::run(User *user, const Message& msg) {
 
 	try {
 		return (this->*_commands.at(cmd))(user, msg);
-	} catch (out_of_range e) {
+	} catch (out_of_range &e) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_UNKNOWNCOMMAND << user->getNickname() << cmd << ERR_UNKNOWNCOMMAND_MSG);
 	}
 	return true;
