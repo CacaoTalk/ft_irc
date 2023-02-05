@@ -183,9 +183,9 @@ void Server::deleteChannel(const string& name) {
 
 	if (it == _allChannel.end()) return ;
 	
+	cout << "Delete channel from server: " << name << '\n';
 	_allChannel.erase(name);
 	delete ch;
-	cout << "channel deleted: " << name << '\n';
 }
 
 void Server::disconnectClient(int clientFd) {
