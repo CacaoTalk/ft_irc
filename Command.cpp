@@ -285,6 +285,7 @@ bool Command::cmdQuit(User *user, const Message& msg) {
 		const int remainUsers = (*it)->deleteUser(user->getFd());
 		if (remainUsers == 0) _server.deleteChannel((*it)->getName());
 	}
+	user->clearMyChannelList();
 	user->setIsQuiting();
 	return false;
 }

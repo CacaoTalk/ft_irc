@@ -210,6 +210,7 @@ void Server::disconnectClient(int clientFd) {
 		const int remainUsers = (*it)->deleteUser(targetUser->getFd());
 		if (remainUsers == 0) deleteChannel((*it)->getName());
 	}
+	targetUser->clearMyChannelList();
 	delete targetUser;
 	cout << "client disconnected: " << clientFd << '\n';
 }

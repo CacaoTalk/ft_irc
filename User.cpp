@@ -7,7 +7,6 @@ User::User(int fd, const string& host) : _fd(fd), _host(host), _auth(false), _is
 
 User::~User() {
     close(_fd);
-    _myChannelList.clear();
 }
 
 int User::getFd(void) const {
