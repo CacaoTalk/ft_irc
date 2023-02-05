@@ -23,6 +23,9 @@
 # define ERR_NOTEXTTOSEND "412"
 # define ERR_NOTEXTTOSEND_MSG ":No text to send"
 
+# define ERR_UNKNOWNCOMMAND "421"
+# define ERR_UNKNOWNCOMMAND_MSG ":Unknown command"
+
 # define ERR_NONICKNAMEGIVEN "431"
 # define ERR_NONICKNAMEGIVEN_MSG ":No nickname given"
 # define ERR_ERRONEUSNICKNAME "432"

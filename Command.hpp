@@ -3,24 +3,40 @@
 #ifndef COMMAND_HPP
 # define COMMAND_HPP
 
+# include <map>
+# include <string>
+
+using namespace std;
+
 class Server;
 class User;
 class Message;
 
-struct Command
-{
-	static bool runCommand(Server& server, User *user, const Message& msg);
+class Command {
+	private:
+		Server& _server;
+		map<string, bool (Command::*)(User *, const Message&)> _commands;
 
-	static bool cmdPrivmsg(Server& server, User *user, const Message& msg);
-	static bool cmdJoin(Server& server, User *user, const Message& msg);
-	static bool cmdPart(Server& server, User *user, const Message& msg);
-	static bool cmdPass(User *user, const Message& msg);
-	static bool cmdNick(Server& server, User *user, const Message& msg);
-	static bool cmdUser(Server& server, User *user, const Message& msg);
-	static bool cmdPing(User *user, const Message& msg);
-	static bool cmdQuit(Server& server, User *user, const Message& msg);
-	static bool cmdKick(Server& server, User *user, const Message& msg);
-	static bool cmdNotice(Server& server, User *user, const Message& msg);
+		Command(void);
+		Command(const Command& src);
+		Command& operator=(const Command& src);
+
+		bool cmdPrivmsg(User *user, const Message& msg);
+		bool cmdJoin(User *user, const Message& msg);
+		bool cmdPart(User *user, const Message& msg);
+		bool cmdPass(User *user, const Message& msg);
+		bool cmdNick(User *user, const Message& msg);
+		bool cmdUser(User *user, const Message& msg);
+		bool cmdPing(User *user, const Message& msg);
+		bool cmdQuit(User *user, const Message& msg);
+		bool cmdKick(User *user, const Message& msg);
+		bool cmdNotice(User *user, const Message& msg);
+
+	public:
+		Command(Server& server);
+		~Command();
+
+		bool run(User *user, const Message& msg);
 };
 
 #endif

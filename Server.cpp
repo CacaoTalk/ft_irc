@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include <iostream>
 
-Server::Server(int port, string password): _fd(UNDEFINED_FD), _kq(UNDEFINED_FD), _port(port), _password(password) {
+Server::Server(int port, string password): _fd(UNDEFINED_FD), _kq(UNDEFINED_FD), _port(port), _password(password), _command(*this) {
 	struct sockaddr_in serverAddr;
 
 	if ((_fd = socket(PF_INET, SOCK_STREAM, 0)) == ERR_RETURN)
@@ -125,7 +125,7 @@ void Server::handleMessageFromBuffer(User* user) {
 		}
 		Message msg(user->getCmdBuffer().substr(0, crlfPos));
 		user->setCmdBuffer(user->getCmdBuffer().substr(crlfPos + 1));
-		if (!Command::runCommand(*this, user, msg)) break;
+		if (!_command.run(user, msg)) break;
 	}
 }
 
