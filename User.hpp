@@ -22,6 +22,7 @@ class User {
 		string _cmdBuffer;
 		string _replyBuffer;
 		vector<Channel *> _myChannelList;
+		bool _isQuiting;
 
 		User(void);
 		User(const User& user);
@@ -32,6 +33,7 @@ class User {
 		~User();
 		
 		int getFd(void) const;
+		const string& getHost(void) const;
 		const string& getPassword(void) const;
 		const string getNickname(void) const;
 		const string getSource(void) const;
@@ -40,15 +42,19 @@ class User {
 		const string& getCmdBuffer(void) const;
 		const string& getReplyBuffer(void) const;
 		const vector<Channel *>& getMyAllChannel(void) const;
+		bool getIsQuiting(void) const;
 
 		void setPassword(const string& pwd);
 		void setNickname(const string& nickname);
 		void setUsername(const string& username);
 		void setAuth(void);
+		void setIsQuiting(void);
 
 		void setCmdBuffer(const string& src);
+		void clearCmdBuffer(void);
 		void setReplyBuffer(const string& src);
 		void setReplyBuffer(const Message& msg);
+		void clearReplyBuffer(void);
 		void addToCmdBuffer(const string& src);
 		void addToReplyBuffer(const string& src);
 		void addToReplyBuffer(const Message& msg);
@@ -57,6 +63,7 @@ class User {
 		void deleteFromMyChannelList(Channel* channel);
 		void clearMyChannelList(void);
 		void broadcastToMyChannels(const Message& msg, const int ignoreFd = UNDEFINED_FD) const;
+
 };
 
 #endif
