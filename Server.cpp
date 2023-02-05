@@ -46,6 +46,7 @@ void Server::acceptNewClient(void) {
 	memset(hostStr, 0, sizeof(hostStr));
 	if ((clientSocket = accept(_fd, (struct sockaddr *)&clientAddr, &addrLen)) == ERR_RETURN)
 		throw(runtime_error("accept() error"));
+	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
 	inet_ntop(AF_INET, &clientAddr.sin_addr, hostStr, INET_ADDRSTRLEN);
 	cout << "accept new client: " << clientSocket << " / Host : " << hostStr << endl;
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
