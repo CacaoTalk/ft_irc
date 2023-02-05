@@ -327,6 +327,7 @@ bool Command::cmdKick(User *user, const Message& msg) {
 		targetChannel->broadcast(Message() << ":" << user->getSource() << msg.getCommand() << msg.getParams()[0] << *it << reason);
 		const int remainUsers = targetChannel->deleteUser(targetUser->getFd());
 		if (remainUsers == 0) _server.deleteChannel(targetChannel->getName());
+		targetUser->deleteFromMyChannelList(targetChannel);
 	}
 	return true;
 }
