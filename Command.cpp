@@ -113,6 +113,10 @@ bool Command::cmdJoin(User *user, const Message& msg) {
         targetChannel = _server.findChannelByName(targetChannelName);
         if (targetChannel == NULL) {
             targetChannel = _server.addChannel(targetChannelName);
+			if (targetChannel == NULL) {
+				user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_UNAVAILRESOURCE << targetChannelName << ERR_UNAVAILRESOURCE_MSG);
+				return true;
+			}
         } else if (targetChannel->findUser(user->getFd()) != NULL) continue;
 		
         targetChannel->addUser(user->getFd(), user);
