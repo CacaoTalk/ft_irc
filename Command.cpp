@@ -277,14 +277,7 @@ bool Command::cmdQuit(User *user, const Message& msg) {
 
 	user->clearCmdBuffer();
 	user->setReplyBuffer("\r\nERROR :Closing Link: " + user->getHost() + " " + reason + "\r\n");
-
-	int clientFd = user->getFd();
-	user->broadcastToMyChannels(Message() << ":" << user->getSource() << msg.getCommand() << reason, clientFd);
-	const vector<Channel *> userChannelList = user->getMyAllChannel();
-	for (vector<Channel *>::const_iterator it = userChannelList.begin(); it != userChannelList.end(); ++it) {
-		const int remainUsers = (*it)->deleteUser(user->getFd());
-		if (remainUsers == 0) _server.deleteChannel((*it)->getName());
-	}
+	user->broadcastToMyChannels(Message() << ":" << user->getSource() << msg.getCommand() << reason, user->getFd());
 	user->setIsQuiting();
 	return false;
 }
