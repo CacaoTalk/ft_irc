@@ -32,6 +32,8 @@
 # define ERR_ERRONEUSNICKNAME_MSG ":Erroneous nickname"
 # define ERR_NICKNAMEINUSE "433"
 # define ERR_NICKNAMEINUSE_MSG ":Nickname is already in use"
+# define ERR_UNAVAILRESOURCE "437"
+# define ERR_UNAVAILRESOURCE_MSG ":Channel is temporarily unavailable"
 
 # define ERR_USERNOTINCHANNEL "441"
 # define ERR_USERNOTINCHANNEL_MSG ":They aren't on that channel"

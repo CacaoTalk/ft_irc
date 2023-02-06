@@ -21,6 +21,7 @@
 # include "Message.hpp"
 # include "Command.hpp"
 # include "Reply.hpp"
+# include "CommonValue.hpp"
 
 # define ERR_RETURN -1
 # define CR '\r'
