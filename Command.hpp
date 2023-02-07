@@ -32,6 +32,8 @@ class Command {
 		bool cmdKick(User *user, const Message& msg);
 		bool cmdNotice(User *user, const Message& msg);
 
+		bool isCommandNeedAuth(const string& cmd);
+
 	public:
 		Command(Server& server);
 		~Command();

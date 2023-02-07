@@ -30,6 +30,7 @@ bool Command::run(User *user, const Message& msg) {
 	const string& cmd = msg.getCommand();
 
 	if (!prefix.empty() && prefix != user->getNickname()) return true;
+	if (!user->getAuth() && isCommandNeedAuth(cmd)) return true;
 
 	try {
 		return (this->*_commands.at(cmd))(user, msg);
@@ -362,5 +363,11 @@ bool Command::cmdNotice(User *user, const Message& msg) {
             targetUser->addToReplyBuffer(Message() << ":" << user->getSource() << msg.getCommand() << targetName << ":" << msg.getParams()[1]);
         }
     }
+	return true;
+}
+
+bool Command::isCommandNeedAuth(const string& cmd) {
+	if (cmd == "PASS" || cmd == "NICK" || cmd == "USER" || cmd == "PING" || cmd == "QUIT") return false;
+
 	return true;
 }
