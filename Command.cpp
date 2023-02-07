@@ -8,6 +8,11 @@
 #include "Reply.hpp"
 #include "FormatValidator.hpp"
 
+/**
+ * @brief Construct a new Command:: Command object
+ * 
+ * @param server Save server class reference for execute commands
+ */
 Command::Command(Server& server): _server(server) {
 	_commands.insert(make_pair("PRIVMSG", &Command::cmdPrivmsg));
 	_commands.insert(make_pair("JOIN", &Command::cmdJoin));
@@ -21,10 +26,22 @@ Command::Command(Server& server): _server(server) {
 	_commands.insert(make_pair("NOTICE", &Command::cmdNotice));
 }
 
+/**
+ * @brief Destroy the Command:: Command object
+ */
 Command::~Command() {
 	_commands.clear();
 }
 
+/**
+ * @brief Midleware of the IRC commands.
+ * 	Check prefix and command and excute correct function.
+ * 	Return value is determined by each command function.
+ * @param user User class pointer. Message sender.
+ * @param msg Message class reference. It must be parsed by Message constructor before passed.
+ * @return true Keep going
+ * @return false Notify the server that buffer checks are no longer needed
+ */
 bool Command::run(User *user, const Message& msg) {
 	const string& prefix = msg.getPrefix();
 	const string& cmd = msg.getCommand();
@@ -39,6 +56,9 @@ bool Command::run(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief PRIVMSG(IRC command) : Send message to user(s)/channel(s)
+ */
 bool Command::cmdPrivmsg(User *user, const Message& msg) {
     if (msg.paramSize() < 2) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NORECIPIENT << user->getNickname() << ERR_NORECIPIENT_MSG << "(PRIVMSG)");
@@ -71,6 +91,11 @@ bool Command::cmdPrivmsg(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief JOIN(IRC command) : JOIN to channel(s). 
+ * 	If there is no channel with the requested name, create a new channel and join.
+ * 	A parameter of 0 leaves all participating channels.
+ */
 bool Command::cmdJoin(User *user, const Message& msg) {
     if (msg.paramSize() == 0) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
@@ -78,6 +103,7 @@ bool Command::cmdJoin(User *user, const Message& msg) {
 	}
     
     const vector<string> targetList = Message::split(msg.getParams()[0], ',');
+	// A parameter of 0 leaves all participating channels.
     if (targetList.size() == 1 && targetList[0] == "0") {
         vector<string> removeWaitingChannels;
 		const vector<Channel *>& chs = user->getMyAllChannel();
@@ -96,6 +122,7 @@ bool Command::cmdJoin(User *user, const Message& msg) {
         return true;
     }
 
+	// General parameters
     for (vector<string>::const_iterator it = targetList.begin(); it != targetList.end(); ++it) {
         string targetChannelName = *it;
         if (targetChannelName[0] != '#') {
@@ -111,14 +138,17 @@ bool Command::cmdJoin(User *user, const Message& msg) {
         Channel *targetChannel;
 
         targetChannel = _server.findChannelByName(targetChannelName);
+		// Channel with that name does not exist
         if (targetChannel == NULL) {
             targetChannel = _server.addChannel(targetChannelName);
 			if (targetChannel == NULL) {
 				user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_UNAVAILRESOURCE << targetChannelName << ERR_UNAVAILRESOURCE_MSG);
 				return true;
 			}
+		// User is already participating in that channel
         } else if (targetChannel->findUser(user->getFd()) != NULL) continue;
 		
+		// Join the user on that channel
         targetChannel->addUser(user->getFd(), user);
 		user->addToMyChannelList(targetChannel);
 		Message replyMsg[3];
@@ -136,6 +166,9 @@ bool Command::cmdJoin(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief PART(IRC command) : PART from channel(s). 
+ */
 bool Command::cmdPart(User *user, const Message& msg) {
 	if (msg.paramSize() < 1) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
@@ -172,6 +205,9 @@ bool Command::cmdPart(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief PASS(IRC command) :  Passed server password by user. It will be checked after both of NICK and USER 
+ */
 bool Command::cmdPass(User *user, const Message& msg) {
 	if (msg.paramSize() < 1) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
@@ -185,6 +221,9 @@ bool Command::cmdPass(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief NICK(IRC command) :  Request to set/change nickname by user.
+ */
 bool Command::cmdNick(User *user, const Message& msg) {
 	if (msg.paramSize() < 1) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
@@ -225,6 +264,9 @@ bool Command::cmdNick(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief USER(IRC command) :  Register user info passed by user.
+ */
 bool Command::cmdUser(User *user, const Message& msg) {
 	if (msg.paramSize() < 4) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
@@ -259,6 +301,9 @@ bool Command::cmdUser(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief PING(IRC command) : Signal for maintaining connection. 
+ */
 bool Command::cmdPing(User *user, const Message& msg) {
 	if (msg.paramSize() < 1) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
@@ -274,6 +319,9 @@ bool Command::cmdPing(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief QUIT(IRC command) :  User leaves the server.
+ */
 bool Command::cmdQuit(User *user, const Message& msg) {
 	string reason = ":Quit:";
 	if (msg.paramSize() == 1) reason += msg.getParams()[0];
@@ -286,6 +334,9 @@ bool Command::cmdQuit(User *user, const Message& msg) {
 	return false;
 }
 
+/**
+ * @brief KICK(IRC command) :  Channel operator kick user from channel.
+ */
 bool Command::cmdKick(User *user, const Message& msg) {
 	if (msg.paramSize() < 2)
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NEEDMOREPARAMS << user->getNickname() << msg.getCommand() << ERR_NEEDMOREPARAMS_MSG);
@@ -335,6 +386,9 @@ bool Command::cmdKick(User *user, const Message& msg) {
 	return true;
 }
 
+/**
+ * @brief NOTICE(IRC command) :  Notice to user(s)/channel(s).
+ */
 bool Command::cmdNotice(User *user, const Message& msg) {
 	if (msg.paramSize() == 0) {
 		user->addToReplyBuffer(Message() << ":" << SERVER_HOSTNAME << ERR_NORECIPIENT << user->getNickname() << ERR_NORECIPIENT_MSG << "(NOTICE)");
