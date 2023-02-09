@@ -39,8 +39,8 @@ Command::~Command() {
  * 	Return value is determined by each command function.
  * @param user User class pointer. Message sender.
  * @param msg Message class reference. It must be parsed by Message constructor before passed.
- * @return true Keep going
- * @return false Notify the server that buffer checks are no longer needed
+ * @return true : Keep going //
+ * @return false : Notify the server that buffer checks are no longer needed
  */
 bool Command::run(User *user, const Message& msg) {
 	const string& prefix = msg.getPrefix();

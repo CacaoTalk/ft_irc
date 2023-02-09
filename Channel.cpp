@@ -46,7 +46,7 @@ const vector<string> Channel::getUserList(void) const {
  * 
  * @param clientFd Socket fd of user
  * @param user User class pointer of user
- * @exception container.insert method can throw exception
+ * @throw container.insert method can throw exception
  */
 void Channel::addUser(int clientFd, User *user) {
     if (_userList.empty()) _operList.insert(clientFd);
@@ -58,7 +58,7 @@ void Channel::addUser(int clientFd, User *user) {
  * 
  * @param clientFd Socket fd of user
  * @return int : Number of remain users after delete user. This is for delete channel if nobody in this channel.
- * @exception container.insert method can throw exception
+ * @throw container.insert method can throw exception
  */
 int Channel::deleteUser(int clientFd) {
     map<int, User *>::iterator it;

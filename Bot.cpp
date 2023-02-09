@@ -38,7 +38,7 @@ void Bot::deleteMenu(vector<string> params) {
 /**
  * @brief Make menu list string from current list
  * 
- * @return const string "MENU : <menu1>, <menu2>..."
+ * @return const string : "MENU : <menu1>, <menu2>..."
  */
 const string Bot::showMenu(void) const {
 	string reply;
@@ -55,7 +55,7 @@ const string Bot::showMenu(void) const {
 /**
  * @brief Choose one menu from current list
  * 
- * @return const string "I recommend <menu>"
+ * @return const string : "I recommend <menu>"
  */
 const string Bot::pickMenu(void) const {
 	if (_menuList.empty()) {
