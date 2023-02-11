@@ -44,8 +44,11 @@ void Server::acceptNewClient(void) {
 
 	memset(&clientAddr, 0, sizeof(clientAddr));
 	memset(hostStr, 0, sizeof(hostStr));
-	if ((clientSocket = accept(_fd, (struct sockaddr *)&clientAddr, &addrLen)) == ERR_RETURN)
-		throw(runtime_error("accept() error"));
+	if ((clientSocket = accept(_fd, (struct sockaddr *)&clientAddr, &addrLen)) == ERR_RETURN) {
+		cerr << "aceept() failed! Check errno : " << errno << endl;
+		errno = 0;
+		return ;
+	}
 	if (_allUser.size() >= MAX_USER_NUM) {
 		cout << "Server reached max number of user" << endl;
 		close(clientSocket);
