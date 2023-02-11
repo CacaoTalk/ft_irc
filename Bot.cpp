@@ -1,25 +1,45 @@
 #include "Bot.hpp"
-
+/**
+ * @brief Construct a new Bot:: Set random seed
+ */
 Bot::Bot() {
 	srand(time(NULL));
 }
 
+/**
+ * @brief Destroy the Bot:: Remove menu list
+ */
 Bot::~Bot() {
 	_menuList.clear();
 }
 
+/**
+ * @brief Add menus to list<set>
+ * 
+ * @param params menu names
+ */
 void Bot::addMenu(vector<string> params) {
 	for (vector<string>::size_type i=1; i<params.size(); i++) {
 		_menuList.insert(params[i]);
 	}
 }
 
+/**
+ * @brief Delete menus from list<set>
+ * 
+ * @param params menu names
+ */
 void Bot::deleteMenu(vector<string> params) {
 	for (vector<string>::size_type i=1; i<params.size(); i++) {
 		_menuList.erase(params[i]);
 	}
 }
 
+/**
+ * @brief Make menu list string from current list
+ * 
+ * @return const string : "MENU : <menu1>, <menu2>..."
+ */
 const string Bot::showMenu(void) const {
 	string reply;
 	set<string>::const_iterator it;
@@ -32,6 +52,11 @@ const string Bot::showMenu(void) const {
 	return reply;
 }
 
+/**
+ * @brief Choose one menu from current list
+ * 
+ * @return const string : "I recommend <menu>"
+ */
 const string Bot::pickMenu(void) const {
 	if (_menuList.empty()) {
 		return ("Empty List");
