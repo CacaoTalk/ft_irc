@@ -1,6 +1,16 @@
 #include "Server.hpp"
 #include <iostream>
 
+/**
+ * @brief Construct a new Server:: Create a socket and wait for the client to connect.
+ * 
+ * @param port The port number that the client will use to connect to 
+ * 	the IRC server from which it was created.
+ * 	It will be get by argv[1].
+ * @param password Password to check when connecting to the server.
+ * 	Compare to the value delivered by the client using the PASS command.
+ * 	It will be get by argv[2].
+ */
 Server::Server(int port, string password): _fd(UNDEFINED_FD), _kq(UNDEFINED_FD), _port(port), _password(password), _command(*this) {
 	struct sockaddr_in serverAddr;
 
@@ -21,13 +31,30 @@ Server::Server(int port, string password): _fd(UNDEFINED_FD), _kq(UNDEFINED_FD),
         shutDown("listen() error");
 }
 
+/**
+ * @brief Destroy the Server:: Server object
+ */
 Server::~Server() { }
 
+/**
+ * @brief Create kququq.
+ * @throw Throw runtime_error if kqueue creation fails.
+ */
 void Server::initKqueue(void) {
     if ((_kq = kqueue()) == ERR_RETURN)
         throw(runtime_error("kqueue() error"));
 }
 
+/**
+ * @brief Processes the registration of sockets and events to be managed by kqueue.
+ * 
+ * @param socket Client socket fd
+ * @param filter Event filter. EVFILT_REAT, EVFILT_WRITE
+ * @param flags Handle event. EV_ADD, EV_ENABLE
+ * @param fflags Flag depend on filter. Not used.
+ * @param data Data value depend on filter. Not used.
+ * @param udata User-data that can be used at the event return. Not used.
+ */
 void Server::updateEvents(int socket, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata) {
 	struct kevent event;
 
@@ -35,6 +62,12 @@ void Server::updateEvents(int socket, int16_t filter, uint16_t flags, uint32_t f
 	_eventCheckList.push_back(event);
 }
 
+/**
+ * @brief If a new client connects, assign a new socket to connect.
+ * 	If possible, create a user instance and connect it to the socket you created.
+ * 
+ * @throw new or container.insert can throw exception.
+ */
 void Server::acceptNewClient(void) {
 	int clientSocket;
 	struct sockaddr_in clientAddr;
@@ -63,6 +96,13 @@ void Server::acceptNewClient(void) {
 	_allUser.insert(make_pair(clientSocket, user));
 }
 
+/**
+ * @brief Read from the client socket and save it to the cmd buffer for that user.
+ * 	It then calls a function that checks the cmd buffer for that user.
+ * 	This function will be called when a read event occurs on that client.
+ * 
+ * @param event Event information delivered by kqueue.
+ */
 void Server::recvDataFromClient(const struct kevent& event) {
 	char buf[513];
 	map<int, User *>::iterator it = _allUser.find(event.ident);
@@ -87,6 +127,12 @@ void Server::recvDataFromClient(const struct kevent& event) {
 	}
 }
 
+/**
+ * @brief Pass the send buffer contents that the user has to the client.
+ * 	This function will be called when a write event occurs on that client.
+ * 
+ * @param event Event information delivered by kqueue.
+ */
 void Server::sendDataToClient(const struct kevent& event) {
 	map<int, User *>::iterator it = _allUser.find(event.ident);
 	User* targetUser = it->second;
@@ -111,6 +157,12 @@ void Server::sendDataToClient(const struct kevent& event) {
 	}
 }
 
+/**
+ * @brief Manage events from fd managed by kqueue.
+ *	Socket error handling, new client connections, and read/write processing from existing clients.
+ * 
+ * @param event Event information delivered by kqueue.
+ */
 void Server::handleEvent(const struct kevent& event) {
 	if (event.flags & EV_ERROR) {
 		if (event.ident == (const uintptr_t)_fd)
@@ -131,6 +183,12 @@ void Server::handleEvent(const struct kevent& event) {
 		sendDataToClient(event);
 }
 
+/**
+ * @brief Passes messages truncated to CR/LF characters to the command processing function.
+ * Remove the passed string from the user's cmd buffer.
+ * 
+ * @param user User to check buffer
+ */
 void Server::handleMessageFromBuffer(User* user) {
 	size_t crlfPos;
 
@@ -145,6 +203,13 @@ void Server::handleMessageFromBuffer(User* user) {
 	}
 }
 
+/**
+ * @brief Verify that the user's cmd buffer has characters (CR or LF).
+ * If any, returns the position of the first CR/LF characters.
+ * 
+ * @param user User to check buffer
+ * @return size_t : Position of CR/LF character. If it does not exist, return string::npos.
+ */
 size_t Server::checkCmdBuffer(const User *user) const {
 	const size_t	crPos = user->getCmdBuffer().find(CR, 0);
 	const size_t	lfPos = user->getCmdBuffer().find(LF, 0);
@@ -155,10 +220,23 @@ size_t Server::checkCmdBuffer(const User *user) const {
 	return min(crPos, lfPos);
 }
 
+/**
+ * @brief Gets the entire channel managed by the server.
+ * 
+ * @return const map<string, Channel *>& : Returns a map whose key is the channel name and 
+ * 	value is the channel instance pointer.
+ */
 const map<string, Channel *>& Server::getAllChannel(void) const {
 	return _allChannel;
 }
 
+/**
+ * @brief Search by user's nickname.
+ * 
+ * @param nickname Nickname for find
+ * @return User* : Returns the pointer to the user instance of the user found.
+ * 	Returns NULL if not found.
+ */
 User* Server::findClientByNickname(const string& nickname) const {
 	map<int, User*>::const_iterator it;
 	for (it = _allUser.cbegin(); it != _allUser.end(); ++it) {
@@ -167,6 +245,13 @@ User* Server::findClientByNickname(const string& nickname) const {
 	return NULL;
 }
 
+/**
+ * @brief Search by channel name.
+ * 
+ * @param name Channel name for find
+ * @return Channel* : Returns the pointer to the channel instance of the channel found.
+ * 	Returns NULL if not found.
+ */
 Channel* Server::findChannelByName(const string& name) const {
 	if (name[0] != '#') return NULL;
 	
@@ -177,12 +262,27 @@ Channel* Server::findChannelByName(const string& name) const {
 	return NULL;
 }
 
+/**
+ * @brief Verify that it matches the server password.
+ * 
+ * @param password Password passed by user with PASS command
+ * @return true : Password match / if not return
+ * @return false 
+ */
 bool Server::checkPassword(const string& password) const {
 	if (_password == password) return true;
 
 	return false;
 }
 
+/**
+ * @brief Add a new channel to the server.
+ * 
+ * @param name Channel name to add
+ * @return Channel* : Returns the pointer of the added channel instance.
+ * 	Returns NULL if it fails.
+ * @throw container.insert can throw exception
+ */
 Channel* Server::addChannel(const string& name) {
 	if (_allChannel.size() >= MAX_CHANNEL_NUM) return NULL;
 	
@@ -194,6 +294,11 @@ Channel* Server::addChannel(const string& name) {
 	return ch;
 }
 
+/**
+ * @brief Deletes a channel that exists on the server.
+ * 
+ * @param name Channel name to delete
+ */
 void Server::deleteChannel(const string& name) {
 	map<string, Channel *>::iterator it = _allChannel.find(name);
 	Channel *ch = it->second;
@@ -205,6 +310,13 @@ void Server::deleteChannel(const string& name) {
 	delete ch;
 }
 
+/**
+ * @brief Disconnects a specific client from a server.
+ * Delete user, withdraw from the channel to which 
+ * 	the user belonged (delete channel if necessary)
+ * 
+ * @param clientFd Socket fd of client to disconnect
+ */
 void Server::disconnectClient(int clientFd) {
 	map<int, User *>::iterator it = _allUser.find(clientFd);
 	User* targetUser = it->second;
@@ -222,6 +334,10 @@ void Server::disconnectClient(int clientFd) {
 	cout << "client disconnected: " << clientFd << '\n';
 }
 
+/**
+ * @brief Manage clients that connect to the server's sockets.
+ * 	This function turns an infinite loop.
+ */
 void Server::run() {
 	int numOfEvents;
 	
@@ -238,6 +354,11 @@ void Server::run() {
     }
 }
 
+/**
+ * @brief Called when the server shuts down abnormally.
+ * 
+ * @param msg Error message to output to console
+ */
 void Server::shutDown(const string& msg) {
 	if (_fd != UNDEFINED_FD)
 		close(_fd);
