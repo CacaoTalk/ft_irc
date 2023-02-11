@@ -6,17 +6,13 @@
 # include <map>
 # include <set>
 # include <vector>
-# include "User.hpp"
+
 # include "Bot.hpp"
-
-# define UNDEFINED_FD -1
-# define DEFAULT_PART_MESSAGE " leaved channel."
-# define NEW_OPERATOR_MESSAGE " is new channel operator."
-# define SERVER_HOSTNAME "cacaotalk.42seoul.kr"
-
+# include "CommonValue.hpp"
 
 using namespace std;
 
+class User;
 class Message;
 
 class Channel {

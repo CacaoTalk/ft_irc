@@ -1,3 +1,4 @@
+#include "User.hpp"
 #include "Channel.hpp"
 #include "Message.hpp"
 

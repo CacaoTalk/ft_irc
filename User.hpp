@@ -5,9 +5,10 @@
 
 # include <string>
 # include <vector>
-using namespace std;
 
-# define UNDEFINED_FD -1
+# include "CommonValue.hpp"
+
+using namespace std;
 
 class Channel;
 class Message;

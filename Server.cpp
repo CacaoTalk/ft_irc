@@ -1,5 +1,11 @@
-#include "Server.hpp"
 #include <iostream>
+#include "Server.hpp"
+#include "User.hpp"
+#include "Channel.hpp"
+#include "Message.hpp"
+#include "Command.hpp"
+#include "Reply.hpp"
+#include "CommonValue.hpp"
 
 Server::Server(int port, string password): _fd(UNDEFINED_FD), _kq(UNDEFINED_FD), _port(port), _password(password), _command(*this) {
 	struct sockaddr_in serverAddr;

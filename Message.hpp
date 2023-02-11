@@ -7,8 +7,6 @@
 
 using namespace std;
 
-class Server;
-class User;
 class Message {
     private:
         string _prefix;
