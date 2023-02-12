@@ -5,17 +5,24 @@ cxx	= c++
 ifdef DEBUG
 	FLAGS	:= -Wall -Wextra -Werror -std=c++98 -g3 -fsanitize=address
 else
-	FLAGS	:= -Wall -Wextra -Werror -std=c++98
+	FLAGS	:= -Wall -Wextra -Werror -std=c++98 -O2
 endif
 
 ############### TARGET ###############
 NAME	= ircserv
 
 ################ FILE ################
-SRCS	= main.cpp Server.cpp Channel.cpp User.cpp Message.cpp Command.cpp FormatValidator.cpp Bot.cpp
+HEADERS_DIR	= includes/
+HEADERS_FILES	= Server.hpp User.hpp Channel.hpp Message.hpp Command.hpp FormatValidator.hpp CommonValue.hpp Bot.hpp
+HEADERS	= $(addprefix $(HEADERS_DIR), $(HEADERS_FILES))
+
+SRCS_DIR	= srcs/
+SRCS_FILES	= main.cpp Server.cpp User.cpp Channel.cpp Message.cpp Command.cpp FormatValidator.cpp Bot.cpp
+SRCS	= $(addprefix $(SRCS_DIR), $(SRCS_FILES))
 
 ################ OBJ #################
-OBJS	= $(SRCS:%.cpp=%.o)
+OBJS_DIR	= objs/
+OBJS	= $(addprefix $(OBJS_DIR), $(SRCS_FILES:.cpp=.o))
 
 ############### Color ################
 GREEN="\033[32m"
@@ -32,16 +39,21 @@ CUT = "\033[K"
 ################ RULE ################
 all	: $(NAME)
 
+$(OBJS_DIR):
+	@mkdir $(OBJS_DIR)
+
+$(OBJS): $(HEADER) | $(OBJS_DIR)
+
 $(NAME)	: $(OBJS)
-	@$(cxx) $(FLAGS) $^ -o $@
+	@$(cxx) $(FLAGS) $^ -I$(HEADERS_DIR) -o $@
 	@echo current complie FLAGS : $(FLAGS)
 	@echo complete $(L_GREEN)COMPILE$(RESET) 🌸
 
-%.o	: %.cpp
-	@$(cxx) $(FLAGS) -c $< -o $@
+$(addprefix $(OBJS_DIR), %.o): $(addprefix $(SRCS_DIR), %.cpp)
+	@$(cxx) $(FLAGS) -c -I$(HEADERS_DIR) $< -o $@
 
 clean	:
-	@rm -f $(OBJS)
+	@rm -rf $(OBJS_DIR)
 	@echo $(L_RED)remove$(RESET) OBJ files 🌪
 
 fclean : clean
