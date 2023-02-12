@@ -16,21 +16,12 @@
 # include <sys/errno.h>
 # include <vector>
 
-# include "User.hpp"
-# include "Channel.hpp"
-# include "Message.hpp"
 # include "Command.hpp"
-# include "Reply.hpp"
-# include "CommonValue.hpp"
-
-# define ERR_RETURN -1
-# define CR '\r'
-# define LF '\n'
-# define SERVER_HOSTNAME "cacaotalk.42seoul.kr"
-
 
 using namespace std;
 
+class User;
+class Channel;
 class Server {
     private:
         int _fd;

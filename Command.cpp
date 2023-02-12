@@ -2,11 +2,12 @@
 
 #include "Server.hpp"
 #include "User.hpp"
+#include "Channel.hpp"
 #include "Message.hpp"
 
-#include "CommonValue.hpp"
-#include "Reply.hpp"
 #include "FormatValidator.hpp"
+#include "Reply.hpp"
+#include "CommonValue.hpp"
 
 /**
  * @brief Construct a new Command:: Command object

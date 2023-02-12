@@ -1,3 +1,4 @@
+#include "Message.hpp"
 #include "Server.hpp"
 
 /**

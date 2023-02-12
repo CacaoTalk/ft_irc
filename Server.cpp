@@ -1,5 +1,11 @@
-#include "Server.hpp"
 #include <iostream>
+#include "Server.hpp"
+#include "User.hpp"
+#include "Channel.hpp"
+#include "Message.hpp"
+#include "Command.hpp"
+#include "Reply.hpp"
+#include "CommonValue.hpp"
 
 /**
  * @brief Construct a new Server:: Create a socket and wait for the client to connect.
